@@ -1,0 +1,3 @@
+[submodule "housing-data-poc"]
+	path = housing-data-poc
+	url = https://github.com/chrischaps/HousingData-POC.git
