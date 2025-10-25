@@ -42,6 +42,51 @@ git push origin master
 - `refactor/description` - Code refactoring
 - `docs/description` - Documentation updates
 
+### Common Git Issues and Solutions
+
+**Issue: Push rejected - remote has changes**
+```
+! [rejected]        master -> master (fetch first)
+error: failed to push some refs
+```
+
+**Solution**: Pull remote changes first, then push:
+```bash
+git pull origin master
+# Review any merge conflicts if they occur
+git push origin master
+```
+
+**Issue: Submodule in "modified content" state**
+This occurs when the submodule has uncommitted changes.
+
+**Solution**: Commit changes in the submodule first:
+```bash
+# Navigate to submodule
+cd housing-data-poc
+
+# Commit submodule changes
+git add .
+git commit -m "Your commit message"
+git push origin master
+
+# Return to main repo and commit submodule reference
+cd ..
+git add housing-data-poc
+git commit -m "Update submodule reference"
+```
+
+**Issue: Temporary files being staged**
+Files like `.env~`, `*.un~` (vim backup files) should not be committed.
+
+**Solution**: Add them to `.gitignore`:
+```bash
+# In the appropriate .gitignore file
+echo "*.un~" >> .gitignore
+echo "*~" >> .gitignore
+git add .gitignore
+```
+
 ## Development Commands
 
 ### POC Development (when implemented)
