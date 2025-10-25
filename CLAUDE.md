@@ -2,6 +2,32 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Development Environment
+
+**Shell Preference**: PowerShell
+- All command-line examples in this document use PowerShell syntax
+- Use backtick (`` ` ``) for line continuation, not backslash (`\`)
+- When suggesting new commands, use PowerShell-compatible syntax
+
+### PowerShell Command Equivalents
+
+Common Unix/Bash commands and their PowerShell equivalents:
+
+| Unix/Bash | PowerShell | Description |
+|-----------|------------|-------------|
+| `ls` | `Get-ChildItem` or `ls` | List directory contents |
+| `cat file.txt` | `Get-Content file.txt` or `cat file.txt` | Display file contents |
+| `grep pattern file` | `Select-String -Pattern "pattern" -Path file` | Search for pattern in file |
+| `find . -name "*.js"` | `Get-ChildItem -Recurse -Filter "*.js"` | Find files recursively |
+| `echo "text" >> file` | `"text" \| Add-Content file` | Append to file |
+| `echo "text" > file` | `"text" \| Out-File file` | Write to file (overwrite) |
+| `rm file` | `Remove-Item file` or `rm file` | Remove file |
+| `mkdir dir` | `New-Item -ItemType Directory dir` or `mkdir dir` | Create directory |
+| `touch file` | `New-Item file` | Create empty file |
+| `pwd` | `Get-Location` or `pwd` | Print working directory |
+
+**Note:** Many Unix aliases work in PowerShell (`ls`, `cat`, `rm`, `pwd`, etc.) but use PowerShell cmdlets for scripts.
+
 ## Project Overview
 
 This is a housing market data visualization web application modeled after Google Finance, designed to display customizable graphs and analytics for various housing markets (single-family homes, apartments, rentals, etc.) across different cities and regions.
@@ -14,7 +40,7 @@ This is a housing market data visualization web application modeled after Google
 
 **Branch Strategy**: Create a new feature branch for each feature request or task.
 
-```bash
+```powershell
 # Create and switch to a new feature branch
 git checkout -b feature/feature-name
 
@@ -51,7 +77,7 @@ error: failed to push some refs
 ```
 
 **Solution**: Pull remote changes first, then push:
-```bash
+```powershell
 git pull origin master
 # Review any merge conflicts if they occur
 git push origin master
@@ -61,7 +87,7 @@ git push origin master
 This occurs when the submodule has uncommitted changes.
 
 **Solution**: Commit changes in the submodule first:
-```bash
+```powershell
 # Navigate to submodule
 cd housing-data-poc
 
@@ -80,17 +106,17 @@ git commit -m "Update submodule reference"
 Files like `.env~`, `*.un~` (vim backup files) should not be committed.
 
 **Solution**: Add them to `.gitignore`:
-```bash
+```powershell
 # In the appropriate .gitignore file
-echo "*.un~" >> .gitignore
-echo "*~" >> .gitignore
+"*.un~" | Add-Content .gitignore
+"*~" | Add-Content .gitignore
 git add .gitignore
 ```
 
 ## Development Commands
 
 ### POC Development (when implemented)
-```bash
+```powershell
 # Initialize POC project
 npm create vite@latest housing-data-poc -- --template react-ts
 cd housing-data-poc
@@ -115,7 +141,7 @@ vercel --prod          # Deploy to production
 
 **⚠️ ALWAYS run a build after making code changes to catch TypeScript errors early:**
 
-```bash
+```powershell
 cd housing-data-poc
 npm run build
 ```
@@ -387,10 +413,10 @@ The default CSV file is **86MB**, which can cause issues with serverless deploym
 **Quick Solution - Use Cloud Storage:**
 
 1. Upload CSV to Google Cloud Storage:
-   ```bash
+   ```powershell
    gsutil mb gs://your-housing-data-assets
    gsutil iam ch allUsers:objectViewer gs://your-housing-data-assets
-   gsutil cp housing-data-poc/public/data/default-housing-data.csv \
+   gsutil cp housing-data-poc/public/data/default-housing-data.csv `
      gs://your-housing-data-assets/default-housing-data.csv
    ```
 
