@@ -66,6 +66,23 @@ vercel                  # Deploy to Vercel
 vercel --prod          # Deploy to production
 ```
 
+### Build Verification (IMPORTANT)
+
+**⚠️ ALWAYS run a build after making code changes to catch TypeScript errors early:**
+
+```bash
+cd housing-data-poc
+npm run build
+```
+
+- Run this command before committing changes
+- Address any TypeScript compilation errors immediately
+- Common errors to watch for:
+  - Unused imports or variables (prefix with `_` if intentionally unused)
+  - Type mismatches (ensure all required interface properties are provided)
+  - Incorrect method names or properties
+- The build must complete successfully before deploying or creating pull requests
+
 ## Architecture
 
 ### POC Architecture (Frontend-Only)
@@ -164,7 +181,29 @@ interface WatchlistItem {
 
 ## Data Sources
 
-### Primary API: RentCast
+### Default Data (CSV Provider)
+**The POC now includes default housing data out of the box!**
+
+- **Default Dataset**: Zillow ZHVI (Home Value Index) data for 20+ U.S. cities
+- **Location**: `public/data/default-housing-data.csv`
+- **Auto-loaded**: Fetched automatically on first app load
+- **Time Series**: Historical price data from 2000-2025
+- **Coverage**: Major U.S. cities (New York, LA, Houston, Chicago, Phoenix, etc.)
+- **Format**: Zillow ZHVI time-series CSV format
+
+**User Experience:**
+1. App loads → Default data loads automatically from `/data/default-housing-data.csv`
+2. Users see markets immediately (no upload required)
+3. Users can upload custom CSV to override default data
+4. "Reset to Default" button available after custom upload
+
+**Data Source Indicator:**
+- Settings panel shows: "📊 Default Zillow ZHVI data" or "✓ [filename] (Custom upload)"
+
+### API Providers (Optional)
+The POC supports multiple data providers selectable from Settings:
+
+#### RentCast API
 - **Free Tier**: 50 API calls/month
 - **Base URL**: `https://api.rentcast.io/v1`
 - **Authentication**: API key in header (`X-Api-Key`)
@@ -173,7 +212,7 @@ interface WatchlistItem {
   - `GET /v1/markets` - Get market statistics
   - `GET /v1/value-estimate` - Get property value estimates
 
-### API Key Configuration
+#### API Key Configuration
 ```bash
 # Create .env file (never commit this)
 VITE_RENTCAST_API_KEY=your_api_key_here
@@ -185,7 +224,7 @@ const API_KEY = import.meta.env.VITE_RENTCAST_API_KEY;
 ```
 
 ### Fallback Data
-Mock data for 5 markets (Detroit, Anaheim, Austin, Miami, Seattle) should be available as fallback when API calls fail or for demos without consuming API quota.
+Mock data for 6 markets (New York, LA, Austin, Columbus, Houston, San Antonio) is available as final fallback when both CSV and API providers fail.
 
 ## Component Patterns
 
@@ -286,10 +325,13 @@ See POC_PLAN.md section "Testing the POC" for comprehensive manual testing check
 
 POC deployment to Vercel:
 1. Ensure `.env` is in `.gitignore`
-2. Build project: `npm run build`
-3. Deploy: `vercel` or connect GitHub repo to Vercel dashboard
-4. Add environment variable `VITE_RENTCAST_API_KEY` in Vercel dashboard
-5. Redeploy if environment variables were added after initial deploy
+2. Ensure `public/data/default-housing-data.csv` is committed to repository
+3. Build project: `npm run build`
+4. Deploy: `vercel` or connect GitHub repo to Vercel dashboard
+5. Add environment variable `VITE_RENTCAST_API_KEY` in Vercel dashboard (optional)
+6. Redeploy if environment variables were added after initial deploy
+
+**Note:** The default CSV file in `public/data/` will be automatically included in the Vercel deployment and served as a static asset, so users will see data immediately without any configuration.
 
 ## Reference Documentation
 
