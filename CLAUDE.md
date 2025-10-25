@@ -368,6 +368,8 @@ See POC_PLAN.md section "Testing the POC" for comprehensive manual testing check
 
 ## Deployment
 
+### Vercel (Recommended for Quick Deployment)
+
 POC deployment to Vercel:
 1. Ensure `.env` is in `.gitignore`
 2. Ensure `public/data/default-housing-data.csv` is committed to repository
@@ -377,6 +379,31 @@ POC deployment to Vercel:
 6. Redeploy if environment variables were added after initial deploy
 
 **Note:** The default CSV file in `public/data/` will be automatically included in the Vercel deployment and served as a static asset, so users will see data immediately without any configuration.
+
+### Google Cloud Run (Serverless)
+
+The default CSV file is **86MB**, which can cause issues with serverless deployments. See `housing-data-poc/CLOUD_RUN_DEPLOYMENT.md` for detailed solutions.
+
+**Quick Solution - Use Cloud Storage:**
+
+1. Upload CSV to Google Cloud Storage:
+   ```bash
+   gsutil mb gs://your-housing-data-assets
+   gsutil iam ch allUsers:objectViewer gs://your-housing-data-assets
+   gsutil cp housing-data-poc/public/data/default-housing-data.csv \
+     gs://your-housing-data-assets/default-housing-data.csv
+   ```
+
+2. Deploy with environment variable:
+   ```bash
+   gcloud run deploy housing-data-poc \
+     --image gcr.io/PROJECT_ID/housing-data-poc \
+     --set-env-vars VITE_DEFAULT_CSV_URL=https://storage.googleapis.com/your-housing-data-assets/default-housing-data.csv
+   ```
+
+**Benefits:** Smaller container (~15MB vs ~100MB), faster cold starts, easy to update CSV without redeploying.
+
+See `housing-data-poc/CLOUD_RUN_DEPLOYMENT.md` for complete deployment guide with multiple options.
 
 ## Reference Documentation
 
