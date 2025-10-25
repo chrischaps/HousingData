@@ -394,14 +394,21 @@ The default CSV file is **86MB**, which can cause issues with serverless deploym
      gs://your-housing-data-assets/default-housing-data.csv
    ```
 
-2. Deploy with environment variable:
-   ```bash
-   gcloud run deploy housing-data-poc \
-     --image gcr.io/PROJECT_ID/housing-data-poc \
-     --set-env-vars VITE_DEFAULT_CSV_URL=https://storage.googleapis.com/your-housing-data-assets/default-housing-data.csv
+2. Deploy to Cloud Run from source:
+   ```powershell
+   cd housing-data-poc
+   gcloud run deploy housing-data-poc `
+     --source . `
+     --region us-central1 `
+     --platform managed `
+     --allow-unauthenticated `
+     --port 8080 `
+     --set-env-vars VITE_DEFAULT_CSV_URL=https://storage.googleapis.com/your-bucket-name/default-housing-data.csv
    ```
 
 **Benefits:** Smaller container (~15MB vs ~100MB), faster cold starts, easy to update CSV without redeploying.
+
+**Note:** The `--source .` flag builds and deploys directly from source code. Cloud Run will automatically detect the Node.js app and build it.
 
 See `housing-data-poc/CLOUD_RUN_DEPLOYMENT.md` for complete deployment guide with multiple options.
 
