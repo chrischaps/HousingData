@@ -1,0 +1,69 @@
+import type { MarketCardProps } from '../types';
+import { formatPrice, formatPercentage } from '../utils/formatters';
+
+export const MarketCard = ({ market, onClick, onAddToWatchlist, onAddToComparison }: MarketCardProps) => {
+  const isPositive = market.changeDirection === 'up';
+  const arrow = isPositive ? '↑' : '↓';
+
+  // Debug logging
+  console.log('[MarketCard] Rendering:', {
+    marketName: market.marketName,
+    changeDirection: market.changeDirection,
+    isPositive,
+    priceChange: market.priceChange
+  });
+
+  return (
+    <div
+      className="bg-white rounded-lg shadow p-4 cursor-pointer hover-lift hover:shadow-lg"
+      onClick={onClick}
+    >
+      <div className="flex justify-between items-start mb-3">
+        <div className="flex-1">
+          <h3 className="font-semibold text-lg text-gray-900">{market.marketName}</h3>
+          <p className="text-sm text-gray-500">Single Family Home</p>
+        </div>
+        <div className="flex gap-2">
+          {onAddToComparison && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddToComparison();
+              }}
+              className="text-purple-600 hover:text-purple-900 hover:bg-purple-50 font-medium text-sm px-2 py-1 rounded transition-all hover:scale-105"
+              title="Add to comparison"
+            >
+              ⚖️
+            </button>
+          )}
+          {onAddToWatchlist && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddToWatchlist();
+              }}
+              className="text-blue-600 hover:text-blue-900 hover:bg-blue-50 font-medium text-sm px-2 py-1 rounded transition-all hover:scale-105"
+            >
+              + Add
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div>
+        <p className="text-2xl font-bold text-gray-900 mb-1">
+          {formatPrice(market.currentPrice)}
+        </p>
+        {isPositive ? (
+          <p className="text-sm font-medium text-green-600">
+            {arrow} {formatPercentage(Math.abs(market.priceChange))}
+          </p>
+        ) : (
+          <p className="text-sm font-medium text-red-600">
+            {arrow} {formatPercentage(Math.abs(market.priceChange))}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
