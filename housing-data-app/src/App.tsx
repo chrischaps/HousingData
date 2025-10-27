@@ -10,6 +10,7 @@ import { FavoritesPanel } from './components/FavoritesPanel';
 import { ApiStatusIndicator } from './components/ApiStatusIndicator';
 import { MobileHeader } from './components/MobileHeader';
 import { FeaturedMarketsCarousel } from './components/FeaturedMarketsCarousel';
+import { FavoritesCarousel } from './components/FavoritesCarousel';
 import { BottomSearchBar } from './components/BottomSearchBar';
 import { useMarketData } from './hooks/useMarketData';
 import { useFavorites } from './hooks/useFavorites';
@@ -350,14 +351,22 @@ function App() {
           onSignOut={logout}
         />
 
-        {/* Featured Markets Carousel */}
+        {/* Carousel - Show Favorites if logged in with favorites, otherwise Featured Markets */}
         <div className="pt-4 pb-2">
-          <FeaturedMarketsCarousel
-            markets={marketData}
-            selectedMarketId={selectedMarket?.marketId}
-            onSelectMarket={handleMarketClick}
-            loading={dataLoading}
-          />
+          {user && favorites.length > 0 ? (
+            <FavoritesCarousel
+              favorites={favorites}
+              selectedMarketId={selectedMarket?.marketId}
+              onSelectMarket={handleSelectFavorite}
+            />
+          ) : (
+            <FeaturedMarketsCarousel
+              markets={marketData}
+              selectedMarketId={selectedMarket?.marketId}
+              onSelectMarket={handleMarketClick}
+              loading={dataLoading}
+            />
+          )}
         </div>
 
         {/* Main Chart Area */}
