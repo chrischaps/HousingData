@@ -3,7 +3,7 @@
  */
 export const CompactMarketCardSkeleton = () => {
   return (
-    <div className="flex-shrink-0 w-36 h-28 rounded-lg p-3 bg-white border border-gray-200 animate-pulse">
+    <div className="flex-shrink-0 w-36 h-32 rounded-lg p-3 bg-white border border-gray-200 animate-pulse">
       <div className="flex flex-col h-full">
         {/* Market name skeleton */}
         <div className="h-3 w-20 bg-gray-200 rounded mb-2"></div>

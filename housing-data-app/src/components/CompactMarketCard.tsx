@@ -18,16 +18,14 @@ export const CompactMarketCard = ({ market, onClick, isSelected = false }: Compa
   const changeColor = isPositive ? 'text-green-600' : 'text-red-600';
   const lineColor = isPositive ? '#10B981' : '#EF4444';
 
-  // Prepare data for mini chart (use last 30 data points for sparkline)
-  const chartData = market.historicalData
-    .slice(-30)
-    .map(point => ({ value: point.price }));
+  // Prepare data for mini chart (use ALL historical data for MAX timescale)
+  const chartData = market.historicalData.map(point => ({ value: point.price }));
 
   return (
     <button
       onClick={onClick}
       className={`
-        flex-shrink-0 w-36 h-28 rounded-lg p-3 cursor-pointer transition-all
+        flex-shrink-0 w-36 h-32 rounded-lg p-3 cursor-pointer transition-all
         ${isSelected
           ? 'bg-blue-50 border-2 border-blue-500 shadow-md'
           : 'bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md'
@@ -46,12 +44,12 @@ export const CompactMarketCard = ({ market, onClick, isSelected = false }: Compa
         </div>
 
         {/* Price change */}
-        <div className={`text-xs font-medium ${changeColor} mb-2`}>
+        <div className={`text-xs font-medium ${changeColor} mb-1.5`}>
           {arrow} {formatPercentage(Math.abs(market.priceChange))}
         </div>
 
-        {/* Mini sparkline chart */}
-        <div className="flex-1 -mx-1">
+        {/* Mini sparkline chart - increased height */}
+        <div className="flex-1 -mx-1 min-h-0">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
               <Line
