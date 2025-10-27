@@ -13,7 +13,7 @@ steps:
       - '--build-arg=VITE_FIREBASE_MESSAGING_SENDER_ID=$$VITE_FIREBASE_MESSAGING_SENDER_ID'
       - '--build-arg=VITE_FIREBASE_APP_ID=$$VITE_FIREBASE_APP_ID'
       - '-t'
-      - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/housingdata/housingdata:$COMMIT_SHA'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/housingdata/housingdata:$SHORT_SHA'
       - '-t'
       - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/housingdata/housingdata:latest'
       - '.'
@@ -29,7 +29,7 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/housingdata/housingdata:$COMMIT_SHA'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/housingdata/housingdata:$SHORT_SHA'
 
   # Deploy to Cloud Run
   - name: 'gcr.io/cloud-builders/gcloud'
@@ -37,13 +37,13 @@ steps:
       - 'run'
       - 'deploy'
       - 'housingdata'
-      - '--image=us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/housingdata/housingdata:$COMMIT_SHA'
+      - '--image=us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/housingdata/housingdata:$SHORT_SHA'
       - '--region=us-central1'
       - '--platform=managed'
       - '--allow-unauthenticated'
 
 images:
-  - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/housingdata/housingdata:$COMMIT_SHA'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/housingdata/housingdata:$SHORT_SHA'
   - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/housingdata/housingdata:latest'
 
 # Pull secrets from Secret Manager
