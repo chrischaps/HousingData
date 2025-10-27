@@ -53,7 +53,8 @@ export interface FavoriteMarket {
 export interface MarketCardProps {
   market: MarketPriceData;
   onClick: () => void;
-  onAddToWatchlist?: () => void;
+  onToggleFavorite?: () => void;
+  isFavorited?: boolean;
   onAddToComparison?: () => void;
 }
 

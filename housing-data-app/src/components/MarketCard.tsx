@@ -1,7 +1,7 @@
 import type { MarketCardProps } from '../types';
 import { formatPrice, formatPercentage } from '../utils/formatters';
 
-export const MarketCard = ({ market, onClick, onAddToWatchlist, onAddToComparison }: MarketCardProps) => {
+export const MarketCard = ({ market, onClick, onToggleFavorite, isFavorited = false, onAddToComparison }: MarketCardProps) => {
   const isPositive = market.changeDirection === 'up';
   const arrow = isPositive ? '↑' : '↓';
 
@@ -10,7 +10,8 @@ export const MarketCard = ({ market, onClick, onAddToWatchlist, onAddToCompariso
     marketName: market.marketName,
     changeDirection: market.changeDirection,
     isPositive,
-    priceChange: market.priceChange
+    priceChange: market.priceChange,
+    isFavorited
   });
 
   return (
@@ -36,15 +37,20 @@ export const MarketCard = ({ market, onClick, onAddToWatchlist, onAddToCompariso
               ⚖️
             </button>
           )}
-          {onAddToWatchlist && (
+          {onToggleFavorite && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onAddToWatchlist();
+                onToggleFavorite();
               }}
-              className="text-blue-600 hover:text-blue-900 hover:bg-blue-50 font-medium text-sm px-2 py-1 rounded transition-all hover:scale-105"
+              className={
+                isFavorited
+                  ? 'text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50 font-medium text-sm px-2 py-1 rounded transition-all hover:scale-105'
+                  : 'text-blue-600 hover:text-blue-900 hover:bg-blue-50 font-medium text-sm px-2 py-1 rounded transition-all hover:scale-105'
+              }
+              title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
             >
-              + Add
+              {isFavorited ? '★' : '☆'}
             </button>
           )}
         </div>

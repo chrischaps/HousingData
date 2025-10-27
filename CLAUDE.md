@@ -32,9 +32,47 @@ Common Unix/Bash commands and their PowerShell equivalents:
 
 This is a housing market data visualization web application modeled after Google Finance, designed to display customizable graphs and analytics for various housing markets (single-family homes, apartments, rentals, etc.) across different cities and regions.
 
-**Current Status**: Planning phase with two implementation tracks defined:
-- **POC Track**: 1-2 week proof of concept (see POC_PLAN.md)
-- **Full Implementation**: 12-week comprehensive build (see HOUSING_APP_PLAN.md)
+**Current Status**: Production app with Firebase authentication, Firestore favorites, and market comparison
+- **POC (housing-data-poc)**: Complete proof of concept with CSV data loading, charts, Cloud Run deployment (v0.3.0)
+- **Production App (housing-data-app)**: Feature-complete MVP (v0.6.0) with real-time favorites and comparison - see SERVERLESS_TRANSITION_PLAN.md
+
+## Repository Structure
+
+```
+HousingData/
+├── housing-data-poc/          # POC application (submodule)
+│   ├── src/                   # POC source code
+│   ├── public/data/           # Default CSV data
+│   ├── Dockerfile             # Cloud Run deployment
+│   └── README.md              # POC documentation
+│
+├── housing-data-app/          # Production application (ACTIVE)
+│   ├── src/
+│   │   ├── components/        # UI components
+│   │   │   ├── FavoritesPanel.tsx    # Real-time favorites ⭐
+│   │   │   ├── MarketCard.tsx        # With star buttons
+│   │   │   ├── PriceChart.tsx        # Multi-market overlay
+│   │   │   └── MarketSearch.tsx      # 21k+ market search
+│   │   ├── contexts/          # React contexts (AuthContext)
+│   │   ├── services/          # Firebase, API clients
+│   │   │   ├── favorites.ts          # Firestore CRUD ⭐
+│   │   │   └── providers/            # Data sources
+│   │   ├── hooks/             # Custom hooks
+│   │   │   └── useFavorites.ts       # Real-time hook ⭐
+│   │   ├── types/             # TypeScript definitions
+│   │   └── utils/             # Formatters, CSV parser, cache
+│   ├── .env.example           # Firebase config template
+│   ├── firestore.rules        # Security rules ⭐
+│   ├── package.json           # v0.6.0
+│   └── README.md              # Production app docs
+│
+├── SERVERLESS_TRANSITION_PLAN.md  # Firebase transition roadmap
+├── PRODUCTION_TRANSITION_PLAN.md  # Traditional backend options
+├── SECURITY_AUDIT_REPORT.md       # Comprehensive security audit ⭐
+└── CLAUDE.md                       # This file
+```
+
+**Active Development**: `housing-data-app/` (production)
 
 ## Git Workflow
 
@@ -115,7 +153,30 @@ git add .gitignore
 
 ## Development Commands
 
-### POC Development (when implemented)
+### Production App (housing-data-app) - ACTIVE
+```powershell
+# Navigate to production app
+cd housing-data-app
+
+# Install dependencies
+npm install
+
+# Set up Firebase environment variables
+Copy-Item .env.example .env
+# Edit .env and add your Firebase config from console.firebase.google.com
+
+# Development
+npm run dev              # Start dev server (http://localhost:5173)
+npm run build            # Build for production (ALWAYS run before committing!)
+npm run preview          # Preview production build
+
+# Deployment (TBD - will use Firebase Hosting or Cloud Run)
+# Details coming soon
+```
+
+**Important**: The production app requires Firebase configuration. See `housing-data-app/README.md` for setup instructions.
+
+### POC Development (housing-data-poc) - REFERENCE ONLY
 ```powershell
 # Initialize POC project
 npm create vite@latest housing-data-poc -- --template react-ts
@@ -196,7 +257,65 @@ src/
 - Single data source (RentCast API)
 - Environment variables for API keys (`.env` with `VITE_` prefix)
 
-### Full Implementation Architecture (When Built)
+### Production App Architecture (v0.6.0 - CURRENT)
+
+The production app implements a serverless architecture with Firebase:
+
+**Tech Stack:**
+- React 19 + TypeScript
+- Vite 7 (build tool)
+- Tailwind CSS 4 (styling)
+- Recharts 3 (charts)
+- Firebase Auth 12 (authentication)
+- Firestore (real-time database)
+- IndexedDB (client-side caching)
+
+**Project Structure:**
+```
+src/
+├── components/              # UI components
+│   ├── FavoritesPanel.tsx   # Real-time favorites list
+│   ├── MarketCard.tsx       # With star button
+│   ├── PriceChart.tsx       # Multi-market charts
+│   ├── MarketSearch.tsx     # 21k+ market search
+│   ├── TimeRangeSelector.tsx
+│   ├── SettingsPanel.tsx    # Cache management
+│   └── LoginPage.tsx        # Auth UI
+├── services/
+│   ├── firebase.ts          # Firebase config
+│   ├── favorites.ts         # Firestore CRUD ops
+│   ├── api.ts              # RentCast API client
+│   └── providers/          # Data source pattern
+│       ├── csv.provider.ts
+│       ├── mock.provider.ts
+│       └── factory.ts
+├── hooks/
+│   ├── useFavorites.ts     # Real-time hook
+│   ├── useMarketData.ts
+│   └── useMarketSearch.ts
+├── contexts/
+│   └── AuthContext.tsx     # Auth state management
+├── types/
+│   └── index.ts            # TypeScript interfaces
+├── utils/
+│   ├── formatters.ts
+│   ├── csvParser.ts        # Zillow ZHVI parser
+│   ├── indexedDBCache.ts   # Client cache
+│   └── dataTransform.ts
+├── App.tsx
+└── main.tsx
+```
+
+**Key Features:**
+- ✅ Firebase Authentication (Google Sign-In)
+- ✅ Firestore real-time favorites (with Security Rules)
+- ✅ Market comparison (up to 5 markets)
+- ✅ 21,423 Zillow ZHVI markets with full historical data
+- ✅ IndexedDB caching for performance
+- ✅ Provider pattern for multiple data sources
+- ✅ Responsive design with animations
+
+### Full Implementation Architecture (Future)
 When transitioning from POC to production (see HOUSING_APP_PLAN.md):
 
 **Layered Architecture:**
@@ -243,6 +362,17 @@ interface MarketPriceData {
   lastUpdated: string;
 }
 
+// Favorites types (Firestore-backed) - PRODUCTION
+interface FavoriteMarket {
+  id: string;             // Firestore document ID
+  userId: string;         // Firebase Auth UID
+  marketId: string;       // Market identifier
+  marketName: string;     // Display name
+  notes?: string;         // Optional user notes
+  addedAt: string;        // ISO date string
+}
+
+// Legacy watchlist (localStorage) - POC ONLY
 interface WatchlistItem {
   marketId: string;
   marketName: string;

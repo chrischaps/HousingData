@@ -7,8 +7,10 @@ import { PriceChart } from './components/PriceChart';
 import { TimeRangeSelector } from './components/TimeRangeSelector';
 import { MarketSearch } from './components/MarketSearch';
 import { SettingsPanel } from './components/SettingsPanel';
+import { FavoritesPanel } from './components/FavoritesPanel';
 import { ApiStatusIndicator } from './components/ApiStatusIndicator';
 import { useMarketData } from './hooks/useMarketData';
+import { useFavorites } from './hooks/useFavorites';
 import { createProvider, getProviderType, CSVProvider } from './services/providers';
 import { transformToMarketPriceData, generateHistoricalData } from './utils/dataTransform';
 import type { MarketPriceData, TimeRange, Market } from './types';
@@ -26,6 +28,9 @@ function App() {
 
   // Fetch market data using the custom hook
   const { data: marketData, loading: dataLoading, error } = useMarketData();
+
+  // Favorites hook
+  const { toggleFavorite, isFavorited } = useFavorites();
 
   // Show loading state while checking auth
   if (authLoading) {
@@ -121,8 +126,63 @@ function App() {
     }
   };
 
-  const handleAddToWatchlist = () => {
-    console.log('Add to watchlist clicked');
+  const handleToggleFavorite = async (marketId: string, marketName: string) => {
+    console.log('[App] Toggling favorite:', marketId, marketName);
+    const result = await toggleFavorite(marketId, marketName);
+
+    if (result) {
+      console.log(
+        `[App] Favorite ${result.action === 'added' ? 'added' : 'removed'}:`,
+        marketName
+      );
+    }
+  };
+
+  const handleSelectFavorite = async (marketId: string, marketName: string) => {
+    console.log('[App] Selected favorite from panel:', marketId, marketName);
+
+    try {
+      const provider = createProvider();
+      const providerType = getProviderType();
+
+      // Wait for CSV provider to load data if needed
+      if (providerType === 'csv' && provider instanceof CSVProvider) {
+        await provider.waitForDataLoad();
+      }
+
+      // Get market stats from provider
+      const stats = await provider.getMarketStats(marketName);
+
+      if (!stats) {
+        console.warn('[App] No stats found for favorite:', marketName);
+        return;
+      }
+
+      // Transform to MarketPriceData
+      const marketData = transformToMarketPriceData(marketId, marketName, stats);
+
+      // Add historical data
+      if (stats.historicalPrices && stats.historicalPrices.length > 0) {
+        marketData.historicalData = stats.historicalPrices.map(h => ({
+          date: h.date,
+          price: h.price,
+          propertyType: 'single_family' as const,
+        }));
+      } else {
+        marketData.historicalData = generateHistoricalData(
+          marketData.currentPrice,
+          marketData.changeDirection === 'up'
+            ? marketData.priceChange
+            : -marketData.priceChange,
+          12
+        );
+      }
+
+      console.log('[App] Setting selected market from favorite:', marketData);
+      setSelectedMarket(marketData);
+    } catch (error) {
+      console.error('[App] Failed to load favorite market data:', error);
+    }
   };
 
   const handleAddToComparison = (market: MarketPriceData) => {
@@ -262,6 +322,7 @@ function App() {
               onSelectMarket={handleSelectMarket}
               onAddToComparison={handleAddToComparisonFromSearch}
             />
+            <FavoritesPanel onSelectMarket={handleSelectFavorite} />
             <SettingsPanel onDataChange={() => window.location.reload()} />
           </aside>
 
@@ -308,7 +369,8 @@ function App() {
                       key={market.marketId}
                       market={market}
                       onClick={() => handleMarketClick(market)}
-                      onAddToWatchlist={handleAddToWatchlist}
+                      onToggleFavorite={() => handleToggleFavorite(market.marketId, market.marketName)}
+                      isFavorited={isFavorited(market.marketId)}
                       onAddToComparison={() => handleAddToComparison(market)}
                     />
                   ))}
@@ -327,14 +389,27 @@ function App() {
             {selectedMarket && (
               <section className="space-y-3 sm:space-y-4 animate-fadeIn">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
-                    {selectedMarket.marketName}
-                    {comparisonMarkets.length > 0 && (
-                      <span className="text-sm text-gray-500 ml-2">
-                        vs {comparisonMarkets.length} {comparisonMarkets.length === 1 ? 'market' : 'markets'}
-                      </span>
-                    )}
-                  </h2>
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+                      {selectedMarket.marketName}
+                      {comparisonMarkets.length > 0 && (
+                        <span className="text-sm text-gray-500 ml-2">
+                          vs {comparisonMarkets.length} {comparisonMarkets.length === 1 ? 'market' : 'markets'}
+                        </span>
+                      )}
+                    </h2>
+                    <button
+                      onClick={() => handleToggleFavorite(selectedMarket.marketId, selectedMarket.marketName)}
+                      className={
+                        isFavorited(selectedMarket.marketId)
+                          ? 'text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50 font-medium text-lg px-3 py-1.5 rounded transition-all hover:scale-110'
+                          : 'text-blue-600 hover:text-blue-900 hover:bg-blue-50 font-medium text-lg px-3 py-1.5 rounded transition-all hover:scale-110'
+                      }
+                      title={isFavorited(selectedMarket.marketId) ? 'Remove from favorites' : 'Add to favorites'}
+                    >
+                      {isFavorited(selectedMarket.marketId) ? '★' : '☆'}
+                    </button>
+                  </div>
                   <TimeRangeSelector
                     selected={timeRange}
                     onChange={(range) => setTimeRange(range as TimeRange)}
@@ -402,7 +477,7 @@ function App() {
       <footer className="bg-white border-t border-gray-200 mt-12">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
           <p className="text-center text-sm text-gray-500">
-            Housing Market Data - Production Application <span className="text-gray-400">| v0.5.3</span>
+            Housing Market Data - Production Application <span className="text-gray-400">| v0.6.0</span>
           </p>
         </div>
       </footer>
