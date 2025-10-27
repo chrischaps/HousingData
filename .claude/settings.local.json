@@ -1,13 +1,33 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm install:*)",
+      "Bash(Measure-Object)",
+      "Bash(Select-Object -ExpandProperty Count)",
+      "Bash(npm create:*)",
+      "Bash(npx tailwindcss:*)",
+      "Bash(New-Item -ItemType Directory -Force -Path components,services,hooks,types,utils,contexts,services/providers)",
+      "Bash(Get-Content dist/assets/index-M980vQqo.css)",
+      "Bash(Select-String -Pattern \"positive|negative|primary\")",
+      "Bash(Select-Object -First 10)",
       "Bash(npm run build:*)",
-      "Bash(git add:*)",
       "Bash(git checkout:*)",
+      "Bash(npm audit:*)",
       "Bash(npm run dev:*)",
+      "Bash(Get-Content housing-data-app/dist/assets/*.css)",
+      "Bash(Select-String -Pattern \"hover-lift|animation\")",
+      "Bash(Select-Object -First 5)",
+      "Bash(gcloud secrets create:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfix: Configure nginx to properly serve CSV files\n\nAdd specific location block for .csv files with:\n- Proper Content-Type header (text/csv)\n- Return 404 if not found (instead of falling back to index.html)\n- Add text/csv to gzip compression types\n- Move SPA routing to last to prevent intercepting data file requests\n\nFixes 500 error when loading default-housing-data.csv.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(gcloud builds describe:*)",
+      "Bash(gsutil mb:*)",
+      "Bash(gcloud storage cp:*)",
+      "Bash(gcloud storage buckets add-iam-policy-binding:*)",
+      "Bash(gcloud storage buckets update:*)",
       "Bash(git commit:*)",
-      "WebSearch"
+      "Bash(gcloud builds triggers run:*)",
+      "Bash(gcloud storage buckets:*)",
+      "Bash(gcloud builds list:*)"
     ],
     "deny": [],
     "ask": []

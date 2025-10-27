@@ -1,0 +1,93 @@
+import { useState } from 'react';
+import type { User } from 'firebase/auth';
+
+interface MobileHeaderProps {
+  user: User | null;
+  authLoading: boolean;
+  onSignIn: () => void;
+  onSignOut: () => void;
+}
+
+/**
+ * Mobile-optimized header with user avatar (Google Finance style)
+ */
+export const MobileHeader = ({ user, authLoading, onSignIn, onSignOut }: MobileHeaderProps) => {
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  return (
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
+      <div className="px-4 py-3 flex items-center justify-between">
+        {/* App title */}
+        <h1 className="text-xl font-bold text-gray-900">Housing Data</h1>
+
+        {/* Right side - Auth */}
+        <div className="relative">
+          {authLoading ? (
+            <div className="w-9 h-9 rounded-full bg-gray-200 animate-pulse"></div>
+          ) : user ? (
+            <>
+              {/* User avatar button */}
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="w-9 h-9 rounded-full overflow-hidden border-2 border-gray-300 hover:border-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {user.photoURL ? (
+                  <img
+                    src={user.photoURL}
+                    alt={user.displayName || 'User'}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm">
+                    {(user.displayName?.[0] || user.email?.[0] || 'U').toUpperCase()}
+                  </div>
+                )}
+              </button>
+
+              {/* User menu dropdown */}
+              {showUserMenu && (
+                <>
+                  {/* Backdrop to close menu */}
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowUserMenu(false)}
+                  ></div>
+
+                  {/* Menu */}
+                  <div className="absolute right-0 top-12 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50 animate-fadeIn">
+                    {/* User info */}
+                    <div className="px-4 py-3 border-b border-gray-200">
+                      <p className="text-sm font-semibold text-gray-900">
+                        {user.displayName || 'User'}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                    </div>
+
+                    {/* Sign out button */}
+                    <button
+                      onClick={() => {
+                        onSignOut();
+                        setShowUserMenu(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                </>
+              )}
+            </>
+          ) : (
+            /* Sign in button for non-authenticated users */
+            <button
+              onClick={onSignIn}
+              className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+            >
+              Sign In
+            </button>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+};
