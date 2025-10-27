@@ -1,0 +1,52 @@
+# Dependencies
+node_modules
+housing-data-app/node_modules
+housing-data-poc/node_modules
+
+# Build outputs
+dist
+housing-data-app/dist
+housing-data-poc/dist
+
+# Git
+.git
+.gitignore
+.gitmodules
+
+# Documentation (exclude from image to reduce size)
+*.md
+!housing-data-app/README.md
+
+# Environment files (security - never include in image)
+.env
+.env.local
+.env.*.local
+housing-data-app/.env
+housing-data-app/.env.local
+housing-data-poc/.env
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode
+.idea
+
+# Cache and temp
+.cache
+.vite
+housing-data-app/.vite
+.firebase
+
+# POC (not needed for production app deployment)
+housing-data-poc/
