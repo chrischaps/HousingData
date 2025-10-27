@@ -262,6 +262,26 @@ npm run build
 
 The build output will be in the `dist/` directory.
 
+## Deployment
+
+The production app is deployed to **Google Cloud Run** with CI/CD from GitHub.
+
+**Quick Deploy:**
+```powershell
+# Push to prod branch to trigger automatic deployment
+git checkout prod
+git merge master
+git push origin prod
+```
+
+**📖 See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete deployment instructions including:**
+- Firebase setup and configuration
+- Google Cloud setup (Cloud Run, Secret Manager)
+- CI/CD setup with GitHub triggers
+- Manual deployment options
+- Troubleshooting common deployment issues
+- Post-deployment verification steps
+
 ## Troubleshooting
 
 ### Firebase Configuration Errors

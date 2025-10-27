@@ -568,6 +568,45 @@ The default CSV file is **86MB**, which can cause issues with serverless deploym
 
 See `housing-data-poc/CLOUD_RUN_DEPLOYMENT.md` for complete deployment guide with multiple options.
 
+### Production App (housing-data-app) - Google Cloud Run with CI/CD
+
+The production app uses **automated CI/CD** with GitHub and Cloud Run:
+
+**Quick Deploy:**
+```powershell
+# Push to prod branch triggers automatic deployment
+git checkout prod
+git merge master
+git push origin prod
+```
+
+**Key Features:**
+- ✅ Automated builds on push to `prod` branch
+- ✅ Firebase secrets stored in Secret Manager
+- ✅ Environment variables embedded at build time
+- ✅ Dockerfile + nginx for production serving
+- ✅ Zero-downtime deployments
+
+**📖 Complete Guide:** See `housing-data-app/DEPLOYMENT.md` for:
+- Firebase setup (Authentication, Firestore, Security Rules)
+- Google Cloud setup (Cloud Run, Secret Manager, Cloud Build)
+- CI/CD configuration with GitHub triggers
+- Troubleshooting deployment issues
+- Post-deployment verification
+
+**Architecture:**
+```
+GitHub (prod branch)
+    ↓ (webhook trigger)
+Cloud Build
+    ↓ (reads cloudbuild.yaml)
+Secret Manager → Docker Build (with Firebase env vars)
+    ↓
+Artifact Registry
+    ↓
+Cloud Run (deployed)
+```
+
 ## Reference Documentation
 
 **Planning Documents:**
