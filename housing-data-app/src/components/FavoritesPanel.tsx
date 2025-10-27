@@ -8,6 +8,7 @@
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../services/firebase';
 import { useFavorites } from '../hooks/useFavorites';
+import { FavoriteCard } from './FavoriteCard';
 
 interface FavoritesPanelProps {
   onSelectMarket: (marketId: string, marketName: string) => void;
@@ -94,33 +95,16 @@ export const FavoritesPanel = ({ onSelectMarket }: FavoritesPanelProps) => {
 
       <div className="space-y-2 max-h-96 overflow-y-auto">
         {favorites.map((favorite) => (
-          <div
+          <FavoriteCard
             key={favorite.id}
+            favoriteId={favorite.id}
+            marketId={favorite.marketId}
+            marketName={favorite.marketName}
+            addedAt={favorite.addedAt}
+            notes={favorite.notes}
             onClick={() => onSelectMarket(favorite.marketId, favorite.marketName)}
-            className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 cursor-pointer border border-gray-200 transition-colors group"
-          >
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-gray-900 truncate">
-                {favorite.marketName}
-              </p>
-              <p className="text-xs text-gray-500">
-                Added {new Date(favorite.addedAt).toLocaleDateString()}
-              </p>
-              {favorite.notes && (
-                <p className="text-xs text-gray-600 italic mt-1 truncate">
-                  {favorite.notes}
-                </p>
-              )}
-            </div>
-
-            <button
-              onClick={(e) => handleRemove(favorite.id, e)}
-              className="ml-2 text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition-colors opacity-0 group-hover:opacity-100"
-              title="Remove from favorites"
-            >
-              ✕
-            </button>
-          </div>
+            onRemove={(e) => handleRemove(favorite.id, e)}
+          />
         ))}
       </div>
 

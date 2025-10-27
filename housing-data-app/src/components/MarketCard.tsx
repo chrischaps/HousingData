@@ -1,9 +1,14 @@
+import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import type { MarketCardProps } from '../types';
 import { formatPrice, formatPercentage } from '../utils/formatters';
 
 export const MarketCard = ({ market, onClick, onToggleFavorite, isFavorited = false, onAddToComparison }: MarketCardProps) => {
   const isPositive = market.changeDirection === 'up';
   const arrow = isPositive ? '↑' : '↓';
+  const lineColor = isPositive ? '#10B981' : '#EF4444';
+
+  // Prepare data for sparkline chart (use ALL historical data for MAX timescale)
+  const chartData = market.historicalData.map(point => ({ value: point.price }));
 
   // Debug logging
   console.log('[MarketCard] Rendering:', {
@@ -56,19 +61,37 @@ export const MarketCard = ({ market, onClick, onToggleFavorite, isFavorited = fa
         </div>
       </div>
 
-      <div>
-        <p className="text-2xl font-bold text-gray-900 mb-1">
-          {formatPrice(market.currentPrice)}
-        </p>
-        {isPositive ? (
-          <p className="text-sm font-medium text-green-600">
-            {arrow} {formatPercentage(Math.abs(market.priceChange))}
+      <div className="flex items-end gap-3">
+        <div className="flex-1">
+          <p className="text-2xl font-bold text-gray-900 mb-1">
+            {formatPrice(market.currentPrice)}
           </p>
-        ) : (
-          <p className="text-sm font-medium text-red-600">
-            {arrow} {formatPercentage(Math.abs(market.priceChange))}
-          </p>
-        )}
+          {isPositive ? (
+            <p className="text-sm font-medium text-green-600">
+              {arrow} {formatPercentage(Math.abs(market.priceChange))}
+            </p>
+          ) : (
+            <p className="text-sm font-medium text-red-600">
+              {arrow} {formatPercentage(Math.abs(market.priceChange))}
+            </p>
+          )}
+        </div>
+
+        {/* Sparkline chart */}
+        <div className="w-24 h-12">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData}>
+              <Line
+                type="monotone"
+                dataKey="value"
+                stroke={lineColor}
+                strokeWidth={1.5}
+                dot={false}
+                isAnimationActive={false}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </div>
   );
