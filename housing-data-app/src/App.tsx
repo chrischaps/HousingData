@@ -357,6 +357,7 @@ function App() {
               favorites={favorites}
               selectedMarketId={selectedMarket?.marketId}
               onSelectMarket={handleSelectFavorite}
+              onAddToComparison={handleAddToComparison}
             />
           ) : (
             <FeaturedMarketsCarousel
@@ -547,7 +548,7 @@ function App() {
               onSelectMarket={handleSelectMarket}
               onAddToComparison={handleAddToComparisonFromSearch}
             />
-            {user && <FavoritesPanel onSelectMarket={handleSelectFavorite} />}
+            {user && <FavoritesPanel onSelectMarket={handleSelectFavorite} onAddToComparison={handleAddToComparison} />}
             <SettingsPanel onDataChange={() => window.location.reload()} />
           </aside>
 

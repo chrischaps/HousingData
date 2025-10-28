@@ -1,11 +1,12 @@
 import { useRef } from 'react';
-import type { FavoriteMarket } from '../types';
+import type { FavoriteMarket, MarketPriceData } from '../types';
 import { CompactFavoriteCard } from './CompactFavoriteCard';
 
 interface FavoritesCarouselProps {
   favorites: FavoriteMarket[];
   selectedMarketId?: string;
   onSelectMarket: (marketId: string, marketName: string) => void;
+  onAddToComparison?: (marketData: MarketPriceData) => void;
 }
 
 /**
@@ -16,6 +17,7 @@ export const FavoritesCarousel = ({
   favorites,
   selectedMarketId,
   onSelectMarket,
+  onAddToComparison,
 }: FavoritesCarouselProps) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -84,6 +86,7 @@ export const FavoritesCarousel = ({
                 marketName={favorite.marketName}
                 onClick={() => onSelectMarket(favorite.marketId, favorite.marketName)}
                 isSelected={favorite.marketId === selectedMarketId}
+                onAddToComparison={onAddToComparison}
               />
             </div>
           ))

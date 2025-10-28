@@ -13,6 +13,7 @@ interface FavoriteCardProps {
   notes?: string;
   onClick: () => void;
   onRemove: (e: React.MouseEvent) => void;
+  onAddToComparison?: (marketData: MarketPriceData) => void;
 }
 
 /**
@@ -25,6 +26,7 @@ export const FavoriteCard = ({
   notes,
   onClick,
   onRemove,
+  onAddToComparison,
 }: FavoriteCardProps) => {
   const [marketData, setMarketData] = useState<MarketPriceData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -125,13 +127,27 @@ export const FavoriteCard = ({
             Added {new Date(addedAt).toLocaleDateString()}
           </p>
         </div>
-        <button
-          onClick={onRemove}
-          className="ml-2 text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0"
-          title="Remove from favorites"
-        >
-          ✕
-        </button>
+        <div className="flex gap-1 ml-2 opacity-0 group-hover:opacity-100 flex-shrink-0">
+          {onAddToComparison && marketData && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddToComparison(marketData);
+              }}
+              className="text-purple-600 hover:text-purple-900 hover:bg-purple-50 px-2 py-1 rounded transition-colors"
+              title="Add to comparison"
+            >
+              ⚖️
+            </button>
+          )}
+          <button
+            onClick={onRemove}
+            className="text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition-colors"
+            title="Remove from favorites"
+          >
+            ✕
+          </button>
+        </div>
       </div>
 
       <div className="flex items-end justify-between gap-2">

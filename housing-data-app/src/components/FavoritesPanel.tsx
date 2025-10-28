@@ -9,12 +9,14 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../services/firebase';
 import { useFavorites } from '../hooks/useFavorites';
 import { FavoriteCard } from './FavoriteCard';
+import type { MarketPriceData } from '../types';
 
 interface FavoritesPanelProps {
   onSelectMarket: (marketId: string, marketName: string) => void;
+  onAddToComparison?: (marketData: MarketPriceData) => void;
 }
 
-export const FavoritesPanel = ({ onSelectMarket }: FavoritesPanelProps) => {
+export const FavoritesPanel = ({ onSelectMarket, onAddToComparison }: FavoritesPanelProps) => {
   const [user] = useAuthState(auth);
   const { favorites, loading, error, removeFavorite } = useFavorites();
 
@@ -104,6 +106,7 @@ export const FavoritesPanel = ({ onSelectMarket }: FavoritesPanelProps) => {
             notes={favorite.notes}
             onClick={() => onSelectMarket(favorite.marketId, favorite.marketName)}
             onRemove={(e) => handleRemove(favorite.id, e)}
+            onAddToComparison={onAddToComparison}
           />
         ))}
       </div>

@@ -10,6 +10,7 @@ interface CompactFavoriteCardProps {
   marketName: string;
   onClick: () => void;
   isSelected?: boolean;
+  onAddToComparison?: (marketData: MarketPriceData) => void;
 }
 
 /**
@@ -21,6 +22,7 @@ export const CompactFavoriteCard = ({
   marketName,
   onClick,
   isSelected = false,
+  onAddToComparison,
 }: CompactFavoriteCardProps) => {
   const [marketData, setMarketData] = useState<MarketPriceData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -134,7 +136,21 @@ export const CompactFavoriteCard = ({
         }
       `}
     >
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full relative">
+        {/* Comparison button - top right corner */}
+        {onAddToComparison && marketData && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddToComparison(marketData);
+            }}
+            className="absolute -top-1 -right-1 text-purple-600 hover:text-purple-900 bg-white hover:bg-purple-50 rounded-full w-5 h-5 flex items-center justify-center text-xs border border-purple-200 transition-all hover:scale-110 z-10"
+            title="Add to comparison"
+          >
+            ⚖️
+          </button>
+        )}
+
         {/* Market name (truncated) + Star indicator */}
         <div className="flex items-center justify-between mb-1">
           <div className="text-xs font-medium text-gray-900 truncate flex-1">
