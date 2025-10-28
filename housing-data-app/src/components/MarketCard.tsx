@@ -68,11 +68,11 @@ export const MarketCard = ({ market, onClick, onToggleFavorite, isFavorited = fa
           </p>
           {isPositive ? (
             <p className="text-sm font-medium text-green-600">
-              {arrow} {formatPercentage(Math.abs(market.priceChange))}
+              {arrow} {formatPercentage(market.priceChange)}
             </p>
           ) : (
             <p className="text-sm font-medium text-red-600">
-              {arrow} {formatPercentage(Math.abs(market.priceChange))}
+              {arrow} {formatPercentage(-Math.abs(market.priceChange))}
             </p>
           )}
         </div>

@@ -156,7 +156,7 @@ export const FavoriteCard = ({
             {formatPrice(marketData.currentPrice)}
           </p>
           <p className={`text-xs font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-            {arrow} {formatPercentage(Math.abs(marketData.priceChange))}
+            {arrow} {formatPercentage(isPositive ? marketData.priceChange : -Math.abs(marketData.priceChange))}
           </p>
         </div>
 

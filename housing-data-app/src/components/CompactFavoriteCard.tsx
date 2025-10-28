@@ -166,7 +166,7 @@ export const CompactFavoriteCard = ({
 
         {/* Price change */}
         <div className={`text-xs font-medium ${changeColor} mb-1.5`}>
-          {arrow} {formatPercentage(Math.abs(marketData.priceChange))}
+          {arrow} {formatPercentage(isPositive ? marketData.priceChange : -Math.abs(marketData.priceChange))}
         </div>
 
         {/* Mini sparkline chart */}

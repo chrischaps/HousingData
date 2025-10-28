@@ -45,7 +45,7 @@ export const CompactMarketCard = ({ market, onClick, isSelected = false }: Compa
 
         {/* Price change */}
         <div className={`text-xs font-medium ${changeColor} mb-1.5`}>
-          {arrow} {formatPercentage(Math.abs(market.priceChange))}
+          {arrow} {formatPercentage(isPositive ? market.priceChange : -Math.abs(market.priceChange))}
         </div>
 
         {/* Mini sparkline chart - increased height */}

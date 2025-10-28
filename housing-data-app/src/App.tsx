@@ -403,7 +403,7 @@ function App() {
               <div className={`text-sm font-medium ${
                 selectedMarket.changeDirection === 'up' ? 'text-green-600' : 'text-red-600'
               }`}>
-                {selectedMarket.changeDirection === 'up' ? '↑' : '↓'} {formatPercentage(Math.abs(selectedMarket.priceChange))}
+                {selectedMarket.changeDirection === 'up' ? '↑' : '↓'} {formatPercentage(selectedMarket.changeDirection === 'up' ? selectedMarket.priceChange : -Math.abs(selectedMarket.priceChange))}
               </div>
             </div>
 
