@@ -59,7 +59,7 @@ const ChartSkeleton = () => {
   );
 };
 
-export const PriceChart = ({ data, timeRange, comparisonMarkets = [] }: PriceChartProps) => {
+export const PriceChart = ({ data, timeRange, primaryMarketName, comparisonMarkets = [] }: PriceChartProps) => {
   const [isLoading, setIsLoading] = useState(true);
 
   // Filter data based on time range
@@ -177,7 +177,7 @@ export const PriceChart = ({ data, timeRange, comparisonMarkets = [] }: PriceCha
           <Line
             type="monotone"
             dataKey="primary"
-            name="Primary"
+            name={primaryMarketName || "Primary"}
             stroke={COMPARISON_COLORS[0]}
             strokeWidth={2}
             dot={false}

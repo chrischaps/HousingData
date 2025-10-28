@@ -61,6 +61,7 @@ export interface MarketCardProps {
 export interface PriceChartProps {
   data: PriceDataPoint[];
   timeRange: '1M' | '6M' | '1Y' | '5Y' | 'MAX';
+  primaryMarketName?: string;
   comparisonMarkets?: Array<{
     marketName: string;
     data: PriceDataPoint[];

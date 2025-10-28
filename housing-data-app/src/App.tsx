@@ -410,6 +410,7 @@ function App() {
             <PriceChart
               data={selectedMarket.historicalData}
               timeRange={timeRange}
+              primaryMarketName={selectedMarket.marketName}
               comparisonMarkets={comparisonMarkets.map((market, index) => ({
                 marketName: market.marketName,
                 data: market.historicalData,
@@ -687,6 +688,7 @@ function App() {
                 <PriceChart
                   data={selectedMarket.historicalData}
                   timeRange={timeRange}
+                  primaryMarketName={selectedMarket.marketName}
                   comparisonMarkets={comparisonMarkets.map((market, index) => ({
                     marketName: market.marketName,
                     data: market.historicalData,
