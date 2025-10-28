@@ -78,7 +78,7 @@ export const MarketCard = ({ market, onClick, onToggleFavorite, isFavorited = fa
         </div>
 
         {/* Sparkline chart */}
-        <div className="w-24 h-12">
+        <div className="w-24 h-12 pointer-events-none">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
               <Line
@@ -87,6 +87,7 @@ export const MarketCard = ({ market, onClick, onToggleFavorite, isFavorited = fa
                 stroke={lineColor}
                 strokeWidth={1.5}
                 dot={false}
+                activeDot={false}
                 isAnimationActive={false}
               />
             </LineChart>

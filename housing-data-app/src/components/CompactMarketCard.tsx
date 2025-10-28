@@ -49,7 +49,7 @@ export const CompactMarketCard = ({ market, onClick, isSelected = false }: Compa
         </div>
 
         {/* Mini sparkline chart - increased height */}
-        <div className="flex-1 -mx-1 min-h-0">
+        <div className="flex-1 -mx-1 min-h-0 pointer-events-none">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
               <Line
@@ -58,6 +58,7 @@ export const CompactMarketCard = ({ market, onClick, isSelected = false }: Compa
                 stroke={lineColor}
                 strokeWidth={1.5}
                 dot={false}
+                activeDot={false}
                 isAnimationActive={false}
               />
             </LineChart>

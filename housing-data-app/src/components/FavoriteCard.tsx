@@ -145,7 +145,7 @@ export const FavoriteCard = ({
         </div>
 
         {/* Sparkline chart */}
-        <div className="w-20 h-10">
+        <div className="w-20 h-10 pointer-events-none">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
               <Line
@@ -154,6 +154,7 @@ export const FavoriteCard = ({
                 stroke={lineColor}
                 strokeWidth={1.5}
                 dot={false}
+                activeDot={false}
                 isAnimationActive={false}
               />
             </LineChart>
