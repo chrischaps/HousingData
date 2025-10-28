@@ -7,7 +7,6 @@ import { TimeRangeSelector } from './components/TimeRangeSelector';
 import { MarketSearch } from './components/MarketSearch';
 import { SettingsPanel } from './components/SettingsPanel';
 import { FavoritesPanel } from './components/FavoritesPanel';
-import { ApiStatusIndicator } from './components/ApiStatusIndicator';
 import { MobileHeader } from './components/MobileHeader';
 import { FeaturedMarketsCarousel } from './components/FeaturedMarketsCarousel';
 import { FavoritesCarousel } from './components/FavoritesCarousel';
@@ -504,14 +503,12 @@ function App() {
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3">
-                <img src="/assets/ccc-logo.png" alt="CCC Logo" className="h-8 w-auto" />
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Market Pulse
-                </h1>
-              </div>
-              <ApiStatusIndicator hasError={!!error} dataSource="mock" />
+            <div className="flex items-center gap-3">
+              <img src="/assets/ccc-logo.png" alt="CCC Logo" className="h-8 w-auto" />
+              <h1 className="text-2xl font-bold">
+                <span className="text-gray-900">Market</span>{' '}
+                <span className="text-blue-600">Pulse</span>
+              </h1>
             </div>
             <div className="flex items-center gap-4">
               {authLoading ? (

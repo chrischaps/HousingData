@@ -20,7 +20,10 @@ export const MobileHeader = ({ user, authLoading, onSignIn, onSignOut }: MobileH
         {/* App title with logo */}
         <div className="flex items-center gap-2">
           <img src="/assets/ccc-logo.png" alt="CCC Logo" className="h-6 w-auto" />
-          <h1 className="text-lg font-bold text-gray-900">Market Pulse</h1>
+          <h1 className="text-lg font-bold">
+            <span className="text-gray-900">Market</span>{' '}
+            <span className="text-blue-600">Pulse</span>
+          </h1>
         </div>
 
         {/* Right side - Auth */}

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { CSVProvider, clearProviderCache } from '../services/providers';
 import { IndexedDBCache } from '../utils/indexedDBCache';
+import { ApiStatusIndicator } from './ApiStatusIndicator';
 
 interface SettingsPanelProps {
   onDataChange?: () => void;
@@ -99,7 +100,10 @@ export const SettingsPanel = ({ onDataChange }: SettingsPanelProps) => {
 
       {/* Data Source Status */}
       <div className="space-y-2">
-        <h4 className="text-sm font-medium text-gray-700">Data Source</h4>
+        <div className="flex items-center justify-between">
+          <h4 className="text-sm font-medium text-gray-700">Data Source</h4>
+          <ApiStatusIndicator hasError={false} dataSource="mock" />
+        </div>
 
         {isConfigured && currentFile ? (
           <div className={`border rounded-lg px-3 py-2 ${
