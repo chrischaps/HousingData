@@ -508,7 +508,7 @@ function App() {
               <div className="flex items-center gap-3">
                 <img src="/assets/ccc-logo.png" alt="CCC Logo" className="h-8 w-auto" />
                 <h1 className="text-2xl font-bold text-gray-900">
-                  CCC Market Pulse
+                  Market Pulse
                 </h1>
               </div>
               <ApiStatusIndicator hasError={!!error} dataSource="mock" />
@@ -705,7 +705,7 @@ function App() {
       <footer className="bg-white border-t border-gray-200 mt-12">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
           <p className="text-center text-sm text-gray-500">
-            CCC Market Pulse <span className="text-gray-400">| v0.6.0</span>
+            Market Pulse <span className="text-gray-400">| v0.6.0</span>
           </p>
         </div>
       </footer>
