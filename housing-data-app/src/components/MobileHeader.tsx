@@ -17,8 +17,11 @@ export const MobileHeader = ({ user, authLoading, onSignIn, onSignOut }: MobileH
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
       <div className="px-4 py-3 flex items-center justify-between">
-        {/* App title */}
-        <h1 className="text-xl font-bold text-gray-900">Housing Data</h1>
+        {/* App title with logo */}
+        <div className="flex items-center gap-2">
+          <img src="/assets/ccc-logo.png" alt="CCC Logo" className="h-6 w-auto" />
+          <h1 className="text-lg font-bold text-gray-900">Market Pulse</h1>
+        </div>
 
         {/* Right side - Auth */}
         <div className="relative">
