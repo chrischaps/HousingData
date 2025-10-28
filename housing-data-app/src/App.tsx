@@ -40,10 +40,10 @@ function App() {
   // Favorites hook
   const { favorites, toggleFavorite, isFavorited } = useFavorites();
 
-  // Pre-selection logic for mobile: Select first favorite (if logged in) or first featured market
+  // Pre-selection logic: Select first favorite (if logged in with favorites) or first featured market
   useEffect(() => {
-    // Only run on mobile and when data is loaded
-    if (!isMobile || dataLoading || selectedMarket) return;
+    // Only run when data is loaded and no market is selected yet
+    if (dataLoading || selectedMarket) return;
 
     const selectInitialMarket = async () => {
       // If user is logged in and has favorites, select first favorite
@@ -111,7 +111,7 @@ function App() {
 
     selectInitialMarket();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isMobile, user, favorites.length, marketData.length, dataLoading]);
+  }, [user, favorites.length, marketData.length, dataLoading]);
 
   // Show loading state while checking auth (but allow app to load)
   // We'll show auth loading in the header instead of blocking the whole app
