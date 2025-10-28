@@ -170,8 +170,9 @@ npm run dev              # Start dev server (http://localhost:5173)
 npm run build            # Build for production (ALWAYS run before committing!)
 npm run preview          # Preview production build
 
-# Deployment (TBD - will use Firebase Hosting or Cloud Run)
-# Details coming soon
+# Deployment - Automated CI/CD
+# Push to prod branch → Cloud Build automatically deploys to Cloud Run
+git checkout prod && git merge master && git push origin prod
 ```
 
 **Important**: The production app requires Firebase configuration. See `housing-data-app/README.md` for setup instructions.
@@ -578,14 +579,18 @@ The production app uses **automated CI/CD** with GitHub and Cloud Run:
 git checkout prod
 git merge master
 git push origin prod
+# That's it! Cloud Build watches the prod branch and deploys automatically.
+# No need to run 'gcloud builds submit' manually.
 ```
 
 **Key Features:**
-- ✅ Automated builds on push to `prod` branch
+- ✅ Automated builds on push to `prod` branch (via Cloud Build triggers)
 - ✅ Firebase secrets stored in Secret Manager
 - ✅ Environment variables embedded at build time
 - ✅ Dockerfile + nginx for production serving
 - ✅ Zero-downtime deployments
+
+**⚠️ Important:** Do NOT run `gcloud builds submit` manually after pushing to prod. Cloud Build has a trigger configured to automatically watch the `prod` branch and deploy on every push.
 
 **📖 Complete Guide:** See `housing-data-app/DEPLOYMENT.md` for:
 - Firebase setup (Authentication, Firestore, Security Rules)
