@@ -4,7 +4,8 @@
   "description": "Build scripts for HousingData project",
   "private": true,
   "scripts": {
-    "split-csv": "ts-node scripts/split-csv.ts"
+    "split-csv": "ts-node scripts/split-csv.ts",
+    "upload-csv": "ts-node scripts/upload-to-cloud-storage.ts"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
