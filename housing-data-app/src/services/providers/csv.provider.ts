@@ -20,6 +20,11 @@ const CSV_DATA_SOURCE_KEY = 'csv-data-source'; // 'default' or 'user-upload'
 const DEFAULT_ZHVI_PATH = import.meta.env.VITE_DEFAULT_CSV_URL || '/data/default-housing-data.csv';
 const DEFAULT_ZORI_PATH = import.meta.env.VITE_DEFAULT_ZORI_URL || '/data/default-rental-data.csv';
 
+// Support for split CSV files (one file per market)
+// When USE_SPLIT_CSV is true, fetches individual market files instead of full CSV
+const USE_SPLIT_CSV = import.meta.env.VITE_USE_SPLIT_CSV === 'true';
+const MARKET_DATA_BASE_URL = import.meta.env.VITE_MARKET_DATA_URL || '/data/markets';
+
 export class CSVProvider extends BaseProvider {
   private cachedMarkets: Map<string, MarketStats> = new Map();
   private isDataLoaded: boolean = false;
@@ -511,9 +516,159 @@ export class CSVProvider extends BaseProvider {
   }
 
   /**
-   * Fetch market stats from cached CSV data
+   * Normalize location to create safe filename
+   */
+  private normalizeLocationToFilename(location: string): string {
+    return location
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+  }
+
+  /**
+   * Fetch individual market file (split CSV mode)
+   */
+  private async fetchSplitMarketFile(location: string): Promise<MarketStats | null> {
+    try {
+      const marketKey = this.normalizeLocationToFilename(location);
+
+      // Fetch both ZHVI and ZORI files for this market
+      const zhviUrl = `${MARKET_DATA_BASE_URL}/zhvi/${marketKey}.csv`;
+      const zoriUrl = `${MARKET_DATA_BASE_URL}/zori/${marketKey}.csv`;
+
+      console.log(
+        '%c[CSV Provider] Fetching split market files',
+        'color: #8B5CF6',
+        { location, marketKey, zhviUrl, zoriUrl }
+      );
+
+      const [zhviResponse, zoriResponse] = await Promise.all([
+        fetch(zhviUrl).catch(() => null),
+        fetch(zoriUrl).catch(() => null)
+      ]);
+
+      if (!zhviResponse || !zhviResponse.ok) {
+        console.warn(
+          '%c[CSV Provider] ZHVI file not found',
+          'color: #F59E0B',
+          { location, marketKey }
+        );
+        return null;
+      }
+
+      // Parse ZHVI file
+      const zhviContent = await zhviResponse.text();
+      const zhviLines = zhviContent.trim().split('\n');
+
+      if (zhviLines.length < 2) {
+        console.warn('%c[CSV Provider] Invalid ZHVI file', 'color: #F59E0B', { location });
+        return null;
+      }
+
+      const zhviHeaders = zhviLines[0].split(',');
+      const zhviValues = zhviLines[1].split(',');
+
+      // Extract basic market info
+      const regionId = zhviValues[0];
+      const regionName = zhviValues[1];
+      const state = zhviValues[2];
+      const city = regionName.split(',')[0].trim();
+
+      // Extract historical prices
+      const historicalPrices: Array<{ date: string; price: number }> = [];
+
+      for (let i = 5; i < zhviHeaders.length; i++) {
+        const date = zhviHeaders[i];
+        const price = parseFloat(zhviValues[i]);
+        if (!isNaN(price)) {
+          historicalPrices.push({ date, price });
+        }
+      }
+
+      if (historicalPrices.length === 0) {
+        return null;
+      }
+
+      const currentPrice = historicalPrices[historicalPrices.length - 1].price;
+
+      const marketStats: MarketStats = {
+        id: regionId,
+        city,
+        state,
+        saleData: {
+          medianPrice: currentPrice,
+          minPrice: Math.min(...historicalPrices.map(h => h.price)),
+          maxPrice: Math.max(...historicalPrices.map(h => h.price)),
+          lastUpdatedDate: new Date().toISOString()
+        },
+        historicalPrices
+      };
+
+      // Parse ZORI file if available
+      if (zoriResponse && zoriResponse.ok) {
+        const zoriContent = await zoriResponse.text();
+        const zoriLines = zoriContent.trim().split('\n');
+
+        if (zoriLines.length >= 2) {
+          const zoriHeaders = zoriLines[0].split(',');
+          const zoriValues = zoriLines[1].split(',');
+
+          const historicalRentals: Array<{ date: string; rent: number }> = [];
+
+          for (let i = 5; i < zoriHeaders.length; i++) {
+            const date = zoriHeaders[i];
+            const rent = parseFloat(zoriValues[i]);
+            if (!isNaN(rent)) {
+              historicalRentals.push({ date, rent });
+            }
+          }
+
+          if (historicalRentals.length > 0) {
+            marketStats.rentalData = {
+              medianRent: historicalRentals[historicalRentals.length - 1].rent
+            };
+            marketStats.historicalRentals = historicalRentals;
+          }
+        }
+      }
+
+      console.log(
+        '%c[CSV Provider] ✓ Loaded split market files',
+        'color: #10B981',
+        {
+          location,
+          prices: historicalPrices.length,
+          rentals: marketStats.historicalRentals?.length || 0
+        }
+      );
+
+      return marketStats;
+    } catch (error) {
+      console.error(
+        '%c[CSV Provider] Failed to fetch split market files',
+        'color: #EF4444',
+        { location, error }
+      );
+      return null;
+    }
+  }
+
+  /**
+   * Fetch market stats from cached CSV data or split files
    */
   protected async fetchMarketStatsFromAPI(location: string): Promise<MarketStats | null> {
+    // If using split CSV mode, fetch individual market file
+    if (USE_SPLIT_CSV) {
+      console.log(
+        '%c[CSV Provider] Using split CSV mode',
+        'color: #8B5CF6',
+        { location }
+      );
+      return this.fetchSplitMarketFile(location);
+    }
+
+    // Otherwise use cached full CSV data
     if (!this.isDataLoaded) {
       console.warn(
         '%c[CSV Provider] No data loaded',
