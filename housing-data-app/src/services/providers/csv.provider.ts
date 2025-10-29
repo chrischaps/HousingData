@@ -7,7 +7,7 @@
 
 import { BaseProvider } from './base.provider';
 import type { MarketStats, ProviderInfo } from './types';
-import { parseCSV, validateCSVContent } from '../../utils/csvParser';
+import { parseCSV, validateCSVContent, parseRentalCSV, mergeRentalData } from '../../utils/csvParser';
 import { IndexedDBCache } from '../../utils/indexedDBCache';
 
 const CSV_FILENAME_STORAGE_KEY = 'csv-file-name';
@@ -17,7 +17,8 @@ const CSV_DATA_SOURCE_KEY = 'csv-data-source'; // 'default' or 'user-upload'
 // Support environment variable for Cloud Run / serverless deployments
 // Use VITE_DEFAULT_CSV_URL to point to Cloud Storage or CDN
 // Falls back to local file in public folder
-const DEFAULT_CSV_PATH = import.meta.env.VITE_DEFAULT_CSV_URL || '/data/default-housing-data.csv';
+const DEFAULT_ZHVI_PATH = import.meta.env.VITE_DEFAULT_CSV_URL || '/data/default-housing-data.csv';
+const DEFAULT_ZORI_PATH = import.meta.env.VITE_DEFAULT_ZORI_URL || '/data/default-rental-data.csv';
 
 export class CSVProvider extends BaseProvider {
   private cachedMarkets: Map<string, MarketStats> = new Map();
@@ -133,91 +134,175 @@ export class CSVProvider extends BaseProvider {
       this.loadingMessage = 'Downloading housing data...';
 
       console.log(
-        '%c[CSV Provider] Fetching default CSV file',
+        '%c[CSV Provider] Fetching default ZHVI (home values) and ZORI (rentals) files',
         'color: #8B5CF6; font-weight: bold',
-        { path: DEFAULT_CSV_PATH }
+        { zhvi: DEFAULT_ZHVI_PATH, zori: DEFAULT_ZORI_PATH }
       );
 
-      const response = await fetch(DEFAULT_CSV_PATH);
+      // Load ZHVI (home values) file
+      const zhviResponse = await fetch(DEFAULT_ZHVI_PATH);
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch default CSV: ${response.statusText}`);
+      if (!zhviResponse.ok) {
+        throw new Error(`Failed to fetch default ZHVI CSV: ${zhviResponse.statusText}`);
       }
 
       // Get total file size for progress tracking
-      const contentLength = response.headers.get('content-length');
-      const total = contentLength ? parseInt(contentLength, 10) : 0;
+      const zhviContentLength = zhviResponse.headers.get('content-length');
+      const zhviTotal = zhviContentLength ? parseInt(zhviContentLength, 10) : 0;
 
-      this.loadingMessage = total > 0
-        ? `Downloading ${(total / 1024 / 1024).toFixed(1)} MB...`
-        : 'Downloading data...';
+      this.loadingMessage = zhviTotal > 0
+        ? `Downloading home values (${(zhviTotal / 1024 / 1024).toFixed(1)} MB)...`
+        : 'Downloading home values...';
 
-      let loaded = 0;
-      const reader = response.body?.getReader();
-      const chunks: Uint8Array[] = [];
+      let zhviLoaded = 0;
+      const zhviReader = zhviResponse.body?.getReader();
+      const zhviChunks: Uint8Array[] = [];
 
-      if (reader) {
+      if (zhviReader) {
         while (true) {
-          const { done, value } = await reader.read();
+          const { done, value } = await zhviReader.read();
           if (done) break;
 
-          chunks.push(value);
-          loaded += value.length;
+          zhviChunks.push(value);
+          zhviLoaded += value.length;
 
-          if (total > 0) {
-            this.loadingProgress = Math.round((loaded / total) * 90); // Reserve 10% for parsing
+          if (zhviTotal > 0) {
+            this.loadingProgress = Math.round((zhviLoaded / zhviTotal) * 45); // 0-45% for ZHVI download
             console.log(
-              `%c[CSV Provider] Download progress: ${this.loadingProgress}%`,
+              `%c[CSV Provider] ZHVI download progress: ${this.loadingProgress}%`,
               'color: #8B5CF6',
-              { loaded: `${(loaded / 1024 / 1024).toFixed(1)} MB`, total: `${(total / 1024 / 1024).toFixed(1)} MB` }
+              { loaded: `${(zhviLoaded / 1024 / 1024).toFixed(1)} MB`, total: `${(zhviTotal / 1024 / 1024).toFixed(1)} MB` }
             );
           }
         }
       }
 
       // Combine chunks into single array
-      const allChunks = new Uint8Array(loaded);
-      let position = 0;
-      for (const chunk of chunks) {
-        allChunks.set(chunk, position);
-        position += chunk.length;
+      const zhviAllChunks = new Uint8Array(zhviLoaded);
+      let zhviPosition = 0;
+      for (const chunk of zhviChunks) {
+        zhviAllChunks.set(chunk, zhviPosition);
+        zhviPosition += chunk.length;
       }
 
       // Decode to text
-      const csvContent = new TextDecoder('utf-8').decode(allChunks);
-      this.loadingProgress = 90;
-      this.loadingMessage = 'Processing data...';
+      const zhviContent = new TextDecoder('utf-8').decode(zhviAllChunks);
+      this.loadingProgress = 50;
+      this.loadingMessage = 'Processing home values...';
 
-      // Validate CSV content
-      const validation = validateCSVContent(csvContent);
-      if (!validation.valid) {
-        throw new Error(`Default CSV validation failed: ${validation.error}`);
+      // Validate and parse ZHVI CSV
+      const zhviValidation = validateCSVContent(zhviContent);
+      if (!zhviValidation.valid) {
+        throw new Error(`ZHVI CSV validation failed: ${zhviValidation.error}`);
       }
 
-      // Parse CSV
-      const markets = parseCSV(csvContent);
+      const markets = parseCSV(zhviContent);
 
       if (markets.length === 0) {
-        throw new Error('No valid market data found in default CSV file');
+        throw new Error('No valid market data found in ZHVI file');
       }
 
-      // Store parsed markets in IndexedDB
-      await IndexedDBCache.set(CSV_MARKETS_STORAGE_KEY, markets, Infinity);
+      this.loadingProgress = 60;
+      this.loadingMessage = 'Downloading rental data...';
+
+      // Load ZORI (rental) file
+      try {
+        const zoriResponse = await fetch(DEFAULT_ZORI_PATH);
+
+        if (zoriResponse.ok) {
+          const zoriContentLength = zoriResponse.headers.get('content-length');
+          const zoriTotal = zoriContentLength ? parseInt(zoriContentLength, 10) : 0;
+
+          this.loadingMessage = zoriTotal > 0
+            ? `Downloading rentals (${(zoriTotal / 1024 / 1024).toFixed(1)} MB)...`
+            : 'Downloading rentals...';
+
+          let zoriLoaded = 0;
+          const zoriReader = zoriResponse.body?.getReader();
+          const zoriChunks: Uint8Array[] = [];
+
+          if (zoriReader) {
+            while (true) {
+              const { done, value } = await zoriReader.read();
+              if (done) break;
+
+              zoriChunks.push(value);
+              zoriLoaded += value.length;
+
+              if (zoriTotal > 0) {
+                this.loadingProgress = 60 + Math.round((zoriLoaded / zoriTotal) * 20); // 60-80% for ZORI download
+              }
+            }
+          }
+
+          const zoriAllChunks = new Uint8Array(zoriLoaded);
+          let zoriPosition = 0;
+          for (const chunk of zoriChunks) {
+            zoriAllChunks.set(chunk, zoriPosition);
+            zoriPosition += chunk.length;
+          }
+
+          const zoriContent = new TextDecoder('utf-8').decode(zoriAllChunks);
+          this.loadingProgress = 85;
+          this.loadingMessage = 'Processing rental data...';
+
+          // Parse rental data
+          const rentalData = parseRentalCSV(zoriContent);
+
+          // Merge rental data with home values
+          if (rentalData.size > 0) {
+            const mergedMarkets = mergeRentalData(markets, rentalData);
+            this.loadingProgress = 95;
+            this.loadingMessage = 'Finalizing...';
+
+            // Store merged markets
+            await IndexedDBCache.set(CSV_MARKETS_STORAGE_KEY, mergedMarkets, Infinity);
+            this.cacheMarkets(mergedMarkets);
+          } else {
+            // Store home values only
+            await IndexedDBCache.set(CSV_MARKETS_STORAGE_KEY, markets, Infinity);
+            this.cacheMarkets(markets);
+          }
+        } else {
+          // ZORI file not found, continue with ZHVI only
+          console.warn(
+            '%c[CSV Provider] ZORI file not found, continuing with home values only',
+            'color: #F59E0B'
+          );
+          await IndexedDBCache.set(CSV_MARKETS_STORAGE_KEY, markets, Infinity);
+          this.cacheMarkets(markets);
+        }
+      } catch (error) {
+        // If ZORI loading fails, continue with ZHVI only
+        console.warn(
+          '%c[CSV Provider] Failed to load ZORI data, continuing with home values only',
+          'color: #F59E0B',
+          error
+        );
+        await IndexedDBCache.set(CSV_MARKETS_STORAGE_KEY, markets, Infinity);
+        this.cacheMarkets(markets);
+      }
 
       // Store metadata in localStorage
       localStorage.setItem(CSV_FILENAME_STORAGE_KEY, 'default-housing-data.csv');
       localStorage.setItem(CSV_DATA_SOURCE_KEY, 'default');
 
-      // Cache markets in memory
-      this.cacheMarkets(markets);
+      // Mark as loaded
       this.isDataLoaded = true;
       this.loadingProgress = 100;
       this.loadingMessage = 'Complete!';
 
+      const marketCount = this.cachedMarkets.size;
+      const withRentals = Array.from(this.cachedMarkets.values()).filter(m => m.historicalRentals).length;
+
       console.log(
-        '%c[CSV Provider] ✓ Default CSV loaded successfully',
+        '%c[CSV Provider] ✓ Default data loaded successfully',
         'color: #10B981; font-weight: bold',
-        { markets: markets.length, source: 'default' }
+        {
+          markets: marketCount,
+          withRentals,
+          source: 'default'
+        }
       );
     } catch (error) {
       this.loadingProgress = 0;

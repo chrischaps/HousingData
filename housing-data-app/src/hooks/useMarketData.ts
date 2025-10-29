@@ -210,7 +210,7 @@ export const useMarketData = (): UseMarketDataResult => {
           const marketName = `${stats.city}, ${stats.state}`;
           const marketData = transformToMarketPriceData(marketId, marketName, stats);
 
-          // Use real historical data if available, otherwise generate
+          // Use real historical price data if available, otherwise generate
           if (stats.historicalPrices && stats.historicalPrices.length > 0) {
             marketData.historicalData = stats.historicalPrices.map(h => ({
               date: h.date,
@@ -219,7 +219,7 @@ export const useMarketData = (): UseMarketDataResult => {
             }));
 
             console.log(
-              `%c[useMarketData] ${marketName} historical data`,
+              `%c[useMarketData] ${marketName} historical price data`,
               'color: #10B981',
               {
                 dataPoints: marketData.historicalData.length,
@@ -234,6 +234,24 @@ export const useMarketData = (): UseMarketDataResult => {
                 ? marketData.priceChange
                 : -marketData.priceChange,
               12
+            );
+          }
+
+          // Add rental historical data if available
+          if (stats.historicalRentals && stats.historicalRentals.length > 0) {
+            marketData.historicalRentals = stats.historicalRentals.map(h => ({
+              date: h.date,
+              rent: h.rent,
+              propertyType: 'single_family' as const,
+            }));
+
+            console.log(
+              `%c[useMarketData] ${marketName} historical rental data`,
+              'color: #F97316',
+              {
+                dataPoints: marketData.historicalRentals.length,
+                dateRange: `${marketData.historicalRentals[0]?.date} to ${marketData.historicalRentals[marketData.historicalRentals.length - 1]?.date}`
+              }
             );
           }
 

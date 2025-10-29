@@ -15,7 +15,7 @@ import { useMarketData } from './hooks/useMarketData';
 import { useFavorites } from './hooks/useFavorites';
 import { useIsMobile } from './hooks/useIsMobile';
 import { createProvider, getProviderType, CSVProvider } from './services/providers';
-import { transformToMarketPriceData, generateHistoricalData } from './utils/dataTransform';
+import { transformToMarketPriceData, generateHistoricalData, generateHistoricalRentalData } from './utils/dataTransform';
 import { formatPrice, formatPercentage } from './utils/formatters';
 import type { MarketPriceData, TimeRange, Market } from './types';
 
@@ -30,9 +30,50 @@ function App() {
   const [timeRange, setTimeRange] = useState<TimeRange>('MAX');
   const [comparisonMarkets, setComparisonMarkets] = useState<MarketPriceData[]>([]);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showRentalOverlay, setShowRentalOverlay] = useState(false);
 
   // Detect mobile screen
   const isMobile = useIsMobile();
+
+  // Helper function to add historical data (both home values and rentals) to market data
+  const addHistoricalData = (marketData: MarketPriceData, stats: any) => {
+    // Add home value historical data
+    if (stats.historicalPrices && stats.historicalPrices.length > 0) {
+      marketData.historicalData = stats.historicalPrices.map((h: any) => ({
+        date: h.date,
+        price: h.price,
+        propertyType: 'single_family' as const,
+      }));
+    } else {
+      marketData.historicalData = generateHistoricalData(
+        marketData.currentPrice,
+        marketData.changeDirection === 'up'
+          ? marketData.priceChange
+          : -marketData.priceChange,
+        12
+      );
+    }
+
+    // Add rental historical data if available
+    if (stats.historicalRentals && stats.historicalRentals.length > 0) {
+      marketData.historicalRentals = stats.historicalRentals.map((h: any) => ({
+        date: h.date,
+        rent: h.rent,
+        propertyType: 'single_family' as const,
+      }));
+    } else if (marketData.currentRent && marketData.rentChange) {
+      // Generate mock rental data if we have current rent but no historical data
+      marketData.historicalRentals = generateHistoricalRentalData(
+        marketData.currentRent,
+        marketData.rentChangeDirection === 'up'
+          ? marketData.rentChange
+          : -marketData.rentChange,
+        12
+      );
+    }
+
+    return marketData;
+  };
 
   // Fetch market data using the custom hook
   const { data: marketData, loading: dataLoading, error, loadingProgress, loadingMessage } = useMarketData();
@@ -71,27 +112,16 @@ function App() {
             return;
           }
 
-          // Transform to MarketPriceData
+          // Transform to MarketPriceData and add historical data
           const selectedMarketData = transformToMarketPriceData(firstFavorite.marketId, firstFavorite.marketName, stats);
-
-          // Add historical data
-          if (stats.historicalPrices && stats.historicalPrices.length > 0) {
-            selectedMarketData.historicalData = stats.historicalPrices.map(h => ({
-              date: h.date,
-              price: h.price,
-              propertyType: 'single_family' as const,
-            }));
-          } else {
-            selectedMarketData.historicalData = generateHistoricalData(
-              selectedMarketData.currentPrice,
-              selectedMarketData.changeDirection === 'up'
-                ? selectedMarketData.priceChange
-                : -selectedMarketData.priceChange,
-              12
-            );
-          }
+          addHistoricalData(selectedMarketData, stats);
 
           console.log('[App] Pre-selected favorite market:', selectedMarketData);
+          console.log('[App] Rental data available?', {
+            hasRentalData: !!selectedMarketData.historicalRentals,
+            rentalDataLength: selectedMarketData.historicalRentals?.length || 0,
+            currentRent: selectedMarketData.currentRent
+          });
           setSelectedMarket(selectedMarketData);
         } catch (error) {
           console.error('[App] Failed to load favorite market data:', error);
@@ -117,6 +147,12 @@ function App() {
   // We'll show auth loading in the header instead of blocking the whole app
 
   const handleMarketClick = (market: MarketPriceData) => {
+    console.log('[App] Market clicked from featured list:', market);
+    console.log('[App] Rental data in clicked market?', {
+      hasRentalData: !!market.historicalRentals,
+      rentalDataLength: market.historicalRentals?.length || 0,
+      currentRent: market.currentRent
+    });
     setSelectedMarket(market);
   };
 
@@ -142,30 +178,18 @@ function App() {
         return;
       }
 
-      // Transform to MarketPriceData
+      // Transform to MarketPriceData and add historical data
       const marketId = market.id;
       const marketName = market.name;
       const marketData = transformToMarketPriceData(marketId, marketName, stats);
-
-      // Add historical data
-      if (stats.historicalPrices && stats.historicalPrices.length > 0) {
-        marketData.historicalData = stats.historicalPrices.map(h => ({
-          date: h.date,
-          price: h.price,
-          propertyType: 'single_family' as const,
-        }));
-      } else {
-        // Generate historical data as fallback
-        marketData.historicalData = generateHistoricalData(
-          marketData.currentPrice,
-          marketData.changeDirection === 'up'
-            ? marketData.priceChange
-            : -marketData.priceChange,
-          12
-        );
-      }
+      addHistoricalData(marketData, stats);
 
       console.log('[App] Setting selected market:', marketData);
+      console.log('[App] Rental data available?', {
+        hasRentalData: !!marketData.historicalRentals,
+        rentalDataLength: marketData.historicalRentals?.length || 0,
+        currentRent: marketData.currentRent
+      });
       setSelectedMarket(marketData);
     } catch (error) {
       console.error('[App] Failed to load market data:', error);
@@ -210,27 +234,16 @@ function App() {
         return;
       }
 
-      // Transform to MarketPriceData
+      // Transform to MarketPriceData and add historical data
       const marketData = transformToMarketPriceData(marketId, marketName, stats);
-
-      // Add historical data
-      if (stats.historicalPrices && stats.historicalPrices.length > 0) {
-        marketData.historicalData = stats.historicalPrices.map(h => ({
-          date: h.date,
-          price: h.price,
-          propertyType: 'single_family' as const,
-        }));
-      } else {
-        marketData.historicalData = generateHistoricalData(
-          marketData.currentPrice,
-          marketData.changeDirection === 'up'
-            ? marketData.priceChange
-            : -marketData.priceChange,
-          12
-        );
-      }
+      addHistoricalData(marketData, stats);
 
       console.log('[App] Setting selected market from favorite:', marketData);
+      console.log('[App] Rental data available?', {
+        hasRentalData: !!marketData.historicalRentals,
+        rentalDataLength: marketData.historicalRentals?.length || 0,
+        currentRent: marketData.currentRent
+      });
       setSelectedMarket(marketData);
     } catch (error) {
       console.error('[App] Failed to load favorite market data:', error);
@@ -306,28 +319,11 @@ function App() {
         return;
       }
 
-      // Transform to MarketPriceData
+      // Transform to MarketPriceData and add historical data
       const marketId = market.id;
       const marketName = market.name;
       const marketData = transformToMarketPriceData(marketId, marketName, stats);
-
-      // Add historical data
-      if (stats.historicalPrices && stats.historicalPrices.length > 0) {
-        marketData.historicalData = stats.historicalPrices.map(h => ({
-          date: h.date,
-          price: h.price,
-          propertyType: 'single_family' as const,
-        }));
-      } else {
-        // Generate historical data as fallback
-        marketData.historicalData = generateHistoricalData(
-          marketData.currentPrice,
-          marketData.changeDirection === 'up'
-            ? marketData.priceChange
-            : -marketData.priceChange,
-          12
-        );
-      }
+      addHistoricalData(marketData, stats);
 
       console.log('[App] Adding market to comparison:', marketData.marketName);
       setComparisonMarkets([...comparisonMarkets, marketData]);
@@ -389,27 +385,43 @@ function App() {
         {/* Main Chart Area */}
         {selectedMarket && (
           <div className="px-4 pt-2 pb-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  {selectedMarket.marketName}
-                </h2>
-                <button
-                  onClick={() => handleToggleFavorite(selectedMarket.marketId, selectedMarket.marketName)}
-                  className={
-                    isFavorited(selectedMarket.marketId)
-                      ? 'text-yellow-600 hover:text-yellow-800 text-xl'
-                      : 'text-blue-600 hover:text-blue-900 text-xl'
-                  }
-                  title={isFavorited(selectedMarket.marketId) ? 'Remove from favorites' : 'Add to favorites'}
-                >
-                  {isFavorited(selectedMarket.marketId) ? '★' : '☆'}
-                </button>
+            <div className="mb-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    {selectedMarket.marketName}
+                  </h2>
+                  <button
+                    onClick={() => handleToggleFavorite(selectedMarket.marketId, selectedMarket.marketName)}
+                    className={
+                      isFavorited(selectedMarket.marketId)
+                        ? 'text-yellow-600 hover:text-yellow-800 text-xl'
+                        : 'text-blue-600 hover:text-blue-900 text-xl'
+                    }
+                    title={isFavorited(selectedMarket.marketId) ? 'Remove from favorites' : 'Add to favorites'}
+                  >
+                    {isFavorited(selectedMarket.marketId) ? '★' : '☆'}
+                  </button>
+                </div>
+                <TimeRangeSelector
+                  selected={timeRange}
+                  onChange={(range) => setTimeRange(range as TimeRange)}
+                />
               </div>
-              <TimeRangeSelector
-                selected={timeRange}
-                onChange={(range) => setTimeRange(range as TimeRange)}
-              />
+
+              {/* Rental overlay toggle - only show if rental data is available */}
+              {selectedMarket.historicalRentals && selectedMarket.historicalRentals.length > 0 && (
+                <button
+                  onClick={() => setShowRentalOverlay(!showRentalOverlay)}
+                  className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${
+                    showRentalOverlay
+                      ? 'bg-amber-100 text-amber-800 hover:bg-amber-200'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {showRentalOverlay ? '✓ Showing Rentals' : '+ Show Rentals'}
+                </button>
+              )}
             </div>
 
             {/* Current Price Display */}
@@ -433,6 +445,8 @@ function App() {
                 data: market.historicalData,
                 color: COMPARISON_COLORS[(index + 1) % COMPARISON_COLORS.length],
               }))}
+              rentalData={selectedMarket.historicalRentals}
+              showRentalOverlay={showRentalOverlay}
             />
           </div>
         )}
@@ -671,10 +685,25 @@ function App() {
                       {isFavorited(selectedMarket.marketId) ? '★' : '☆'}
                     </button>
                   </div>
-                  <TimeRangeSelector
-                    selected={timeRange}
-                    onChange={(range) => setTimeRange(range as TimeRange)}
-                  />
+                  <div className="flex items-center gap-3">
+                    {/* Rental overlay toggle - only show if rental data is available */}
+                    {selectedMarket.historicalRentals && selectedMarket.historicalRentals.length > 0 && (
+                      <button
+                        onClick={() => setShowRentalOverlay(!showRentalOverlay)}
+                        className={`text-xs sm:text-sm px-3 py-1.5 rounded-full font-medium transition-colors ${
+                          showRentalOverlay
+                            ? 'bg-amber-100 text-amber-800 hover:bg-amber-200'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        {showRentalOverlay ? '✓ Showing Rentals' : '+ Show Rentals'}
+                      </button>
+                    )}
+                    <TimeRangeSelector
+                      selected={timeRange}
+                      onChange={(range) => setTimeRange(range as TimeRange)}
+                    />
+                  </div>
                 </div>
 
                 {/* Comparison Panel */}
@@ -728,6 +757,8 @@ function App() {
                     data: market.historicalData,
                     color: COMPARISON_COLORS[(index + 1) % COMPARISON_COLORS.length],
                   }))}
+                  rentalData={selectedMarket.historicalRentals}
+                  showRentalOverlay={showRentalOverlay}
                 />
               </section>
             )}

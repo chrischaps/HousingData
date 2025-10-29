@@ -31,6 +31,143 @@ function detectCSVFormat(headers: string[]): 'simple' | 'zillow-zhvi' {
 }
 
 /**
+ * Parse Zillow ZORI time-series CSV format (rental data)
+ * Format: RegionID, SizeRank, RegionName, RegionType, StateName, State, Metro, CountyName, [dates...]
+ * Returns rental data that can be merged with ZHVI home value data
+ */
+function parseZillowZORI(lines: string[], headers: string[]): Map<string, { currentRent: number; rentChange: number; historicalRentals: Array<{ date: string; rent: number }> }> {
+  const rentalData = new Map<string, { currentRent: number; rentChange: number; historicalRentals: Array<{ date: string; rent: number }> }>();
+
+  // Find column indices
+  const regionIDIdx = headers.indexOf('regionid');
+  const regionNameIdx = headers.indexOf('regionname');
+  const stateIdx = headers.indexOf('state');
+
+  // Find all date columns (YYYY-MM-DD format)
+  const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+  const dateColumns: { index: number; date: string }[] = [];
+
+  headers.forEach((header, index) => {
+    if (datePattern.test(header)) {
+      dateColumns.push({ index, date: header });
+    }
+  });
+
+  // Sort date columns by date (most recent last)
+  dateColumns.sort((a, b) => a.date.localeCompare(b.date));
+
+  console.log(
+    '%c[CSV Parser] Zillow ZORI format detected',
+    'color: #F97316',
+    {
+      dateColumns: dateColumns.length,
+      dateRange: `${dateColumns[0]?.date} to ${dateColumns[dateColumns.length - 1]?.date}`,
+      totalRows: lines.length - 1,
+    }
+  );
+
+  // Parse each row
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+
+    const values = parseCSVLine(line);
+
+    if (values.length < headers.length) {
+      continue;
+    }
+
+    try {
+      const _regionID = values[regionIDIdx]; // Prefix with _ to indicate intentionally unused
+      const city = values[regionNameIdx];
+      const state = values[stateIdx];
+
+      if (!city || !state) {
+        continue;
+      }
+
+      // Get the most recent non-empty ZORI value and previous value for percent change
+      let currentRent: number | undefined;
+      let previousRent: number | undefined;
+
+      // Iterate from most recent to oldest
+      for (let j = dateColumns.length - 1; j >= 0; j--) {
+        const dateCol = dateColumns[j];
+        const value = values[dateCol.index];
+
+        if (value && value.trim() !== '') {
+          const numValue = parseFloat(value);
+
+          if (!isNaN(numValue)) {
+            if (currentRent === undefined) {
+              currentRent = numValue;
+            } else if (previousRent === undefined) {
+              previousRent = numValue;
+              break;
+            }
+          }
+        }
+      }
+
+      if (currentRent === undefined) {
+        continue;
+      }
+
+      // Suppress unused variable warning
+      void _regionID;
+
+      // Calculate percent change
+      let rentChange = 0;
+      if (previousRent !== undefined && previousRent > 0) {
+        rentChange = ((currentRent - previousRent) / previousRent) * 100;
+      }
+
+      // Extract ALL historical rental prices
+      const historicalRentals: Array<{ date: string; rent: number }> = [];
+
+      for (let j = 0; j < dateColumns.length; j++) {
+        const dateCol = dateColumns[j];
+        const value = parseFloat(values[dateCol.index]);
+
+        if (!isNaN(value) && value > 0) {
+          historicalRentals.push({
+            date: dateCol.date,
+            rent: Math.round(value),
+          });
+        }
+      }
+
+      // Use both regionID and city-state as keys for matching
+      const marketKey = `${city}, ${state}`.toLowerCase();
+      rentalData.set(marketKey, {
+        currentRent: Math.round(currentRent),
+        rentChange,
+        historicalRentals,
+      });
+
+      console.log(
+        `%c[CSV Parser] ZORI: ${city}, ${state} - $${Math.round(currentRent)}/mo (${rentChange.toFixed(1)}%)`,
+        'color: #F97316; font-size: 10px'
+      );
+    } catch (error) {
+      console.error(
+        `%c[CSV Parser] Failed to parse Zillow ZORI row ${i}`,
+        'color: #EF4444',
+        error
+      );
+    }
+  }
+
+  console.log(
+    '%c[CSV Parser] ✓ Successfully parsed Zillow ZORI data',
+    'color: #10B981; font-weight: bold',
+    { markets: rentalData.size }
+  );
+
+  return rentalData;
+}
+
+/**
  * Parse Zillow ZHVI time-series CSV format
  * Format: RegionID, SizeRank, RegionName, RegionType, StateName, State, Metro, CountyName, [dates...]
  */
@@ -447,6 +584,71 @@ export function validateCSVContent(csvContent: string): { valid: boolean; error?
   }
 
   return { valid: true };
+}
+
+/**
+ * Parse rental CSV (ZORI format) and return rental data by market
+ */
+export function parseRentalCSV(csvContent: string): Map<string, { currentRent: number; rentChange: number; historicalRentals: Array<{ date: string; rent: number }> }> {
+  const lines = csvContent.trim().split('\n');
+
+  if (lines.length < 2) {
+    console.warn('[CSV Parser] ZORI file is empty or invalid');
+    return new Map();
+  }
+
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+
+  return parseZillowZORI(lines, headers);
+}
+
+/**
+ * Merge rental data into home value markets
+ */
+export function mergeRentalData(
+  markets: MarketStats[],
+  rentalData: Map<string, { currentRent: number; rentChange: number; historicalRentals: Array<{ date: string; rent: number }> }>
+): MarketStats[] {
+  console.log(
+    '%c[CSV Parser] Merging rental data with home value data',
+    'color: #8B5CF6; font-weight: bold',
+    { totalMarkets: markets.length, rentalMarkets: rentalData.size }
+  );
+
+  let mergedCount = 0;
+
+  const mergedMarkets = markets.map(market => {
+    const marketKey = `${market.city}, ${market.state}`.toLowerCase();
+    const rental = rentalData.get(marketKey);
+
+    if (rental) {
+      mergedCount++;
+      return {
+        ...market,
+        rentalData: {
+          lastUpdatedDate: market.saleData?.lastUpdatedDate || new Date().toISOString(),
+          medianRent: rental.currentRent,
+          averageRent: rental.currentRent,
+        },
+        rentChange: rental.rentChange,
+        historicalRentals: rental.historicalRentals,
+      };
+    }
+
+    return market;
+  });
+
+  console.log(
+    '%c[CSV Parser] ✓ Merged rental data',
+    'color: #10B981; font-weight: bold',
+    {
+      totalMarkets: markets.length,
+      marketsWithRentals: mergedCount,
+      percentage: `${((mergedCount / markets.length) * 100).toFixed(1)}%`
+    }
+  );
+
+  return mergedMarkets;
 }
 
 /**

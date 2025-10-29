@@ -37,12 +37,21 @@ export interface MarketStats {
     minDaysOnMarket?: number;
   };
   rentalData?: {
-    [key: string]: any;
+    lastUpdatedDate?: string;
+    averageRent?: number;
+    medianRent?: number;
+    minRent?: number;
+    maxRent?: number;
   };
+  rentChange?: number;
   // Historical time-series data (for charts)
   historicalPrices?: Array<{
     date: string;
     price: number;
+  }>;
+  historicalRentals?: Array<{
+    date: string;
+    rent: number;
   }>;
 }
 

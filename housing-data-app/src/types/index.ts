@@ -7,10 +7,19 @@ export interface Market {
   zipCode?: string;
 }
 
+// Data type enum
+export type DataType = 'home_value' | 'rental';
+
 // Price data types
 export interface PriceDataPoint {
   date: string;          // ISO date string
   price: number;
+  propertyType: 'single_family' | 'condo' | 'apartment';
+}
+
+export interface RentalDataPoint {
+  date: string;          // ISO date string
+  rent: number;
   propertyType: 'single_family' | 'condo' | 'apartment';
 }
 
@@ -21,6 +30,11 @@ export interface MarketPriceData {
   priceChange: number;   // percentage
   changeDirection: 'up' | 'down' | 'neutral';
   historicalData: PriceDataPoint[];
+  // Rental data (optional - only if available for this market)
+  currentRent?: number;
+  rentChange?: number;   // percentage
+  rentChangeDirection?: 'up' | 'down' | 'neutral';
+  historicalRentals?: RentalDataPoint[];
   lastUpdated: string;
 }
 
@@ -67,6 +81,9 @@ export interface PriceChartProps {
     data: PriceDataPoint[];
     color: string;
   }>;
+  // Rental overlay support
+  rentalData?: RentalDataPoint[];
+  showRentalOverlay?: boolean;
 }
 
 export interface TimeRangeSelectorProps {

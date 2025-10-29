@@ -1,4 +1,4 @@
-import type { Market, MarketPriceData, PriceDataPoint } from '../types';
+import type { Market, MarketPriceData, PriceDataPoint, RentalDataPoint } from '../types';
 
 /**
  * Transform RentCast property data to Market type
@@ -41,7 +41,12 @@ export const transformToMarketPriceData = (
     priceChange = 3.5;
   }
 
-  return {
+  // Handle rental data if available
+  const rentalData = stats.rentalData;
+  const currentRent = rentalData?.medianRent || rentalData?.averageRent;
+  const rentChange = stats.rentChange;
+
+  const result: MarketPriceData = {
     marketId,
     marketName,
     currentPrice,
@@ -50,6 +55,15 @@ export const transformToMarketPriceData = (
     historicalData: [],
     lastUpdated: saleData.lastUpdatedDate || new Date().toISOString(),
   };
+
+  // Add rental data if available
+  if (currentRent !== undefined && rentChange !== undefined) {
+    result.currentRent = currentRent;
+    result.rentChange = Math.abs(rentChange);
+    result.rentChangeDirection = rentChange > 0 ? 'up' : rentChange < 0 ? 'down' : 'neutral';
+  }
+
+  return result;
 };
 
 /**
@@ -83,6 +97,44 @@ export const generateHistoricalData = (
     data.push({
       date: date.toISOString().split('T')[0], // YYYY-MM-DD format
       price: Math.round(finalPrice),
+      propertyType: 'single_family',
+    });
+  }
+
+  return data;
+};
+
+/**
+ * Generate mock historical rental data for a market
+ * This is used when real historical rental data is not available
+ * @param currentRent - Current monthly rent
+ * @param rentChange - Recent rent change percentage
+ * @param months - Number of months to generate (default 12)
+ */
+export const generateHistoricalRentalData = (
+  currentRent: number,
+  rentChange: number,
+  months: number = 12
+): RentalDataPoint[] => {
+  const data: RentalDataPoint[] = [];
+  const now = new Date();
+
+  // Calculate starting rent based on current rent and trend
+  const monthlyChangeRate = rentChange / 12; // Approximate monthly change
+  let rent = currentRent / (1 + rentChange / 100); // Approximate starting rent
+
+  for (let i = months; i >= 0; i--) {
+    const date = new Date(now);
+    date.setMonth(date.getMonth() - i);
+
+    // Add some randomness to make it look realistic
+    const randomVariation = (Math.random() - 0.5) * 0.02; // ±1% random variation
+    const trendedRent = rent * (1 + (monthlyChangeRate / 100) * (months - i));
+    const finalRent = trendedRent * (1 + randomVariation);
+
+    data.push({
+      date: date.toISOString().split('T')[0], // YYYY-MM-DD format
+      rent: Math.round(finalRent),
       propertyType: 'single_family',
     });
   }
