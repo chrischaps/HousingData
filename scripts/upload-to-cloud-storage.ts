@@ -167,7 +167,7 @@ const createBucket = (bucketName: string, region: string, dryRun: boolean): void
     exec(
       `gcloud storage buckets create gs://${bucketName} ` +
       `--location=${region} ` +
-      `--public-access-prevention`
+      `--no-public-access-prevention`
     );
     console.log(`✅ Bucket created: gs://${bucketName}\n`);
   }
@@ -252,6 +252,15 @@ const makePublic = (bucketName: string, dryRun: boolean): void => {
   }
 
   try {
+    // First, ensure public access prevention is disabled
+    console.log('Disabling public access prevention...');
+    exec(
+      `gcloud storage buckets update gs://${bucketName} ` +
+      `--no-public-access-prevention`,
+      true
+    );
+
+    // Then add public IAM binding
     exec(
       `gcloud storage buckets add-iam-policy-binding gs://${bucketName} ` +
       `--member=allUsers ` +
