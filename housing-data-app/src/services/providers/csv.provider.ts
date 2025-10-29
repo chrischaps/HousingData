@@ -33,7 +33,7 @@ export class CSVProvider extends BaseProvider {
   private loadingMessage: string = '';
 
   readonly info: ProviderInfo = {
-    id: 'csv',
+    id: USE_SPLIT_CSV ? 'csv-split' : 'csv',
     name: 'CSV File',
     description: 'Upload your own market data from a CSV file',
     icon: '📊',
@@ -51,10 +51,28 @@ export class CSVProvider extends BaseProvider {
 
   constructor() {
     super();
-    // Load data asynchronously and store the promise
-    this.loadingPromise = this.loadDataFromStorage().catch(error => {
-      console.error('[CSV Provider] Failed to load on construction', error);
-    });
+
+    // In split CSV mode, skip initial data load (fetch on-demand instead)
+    if (USE_SPLIT_CSV) {
+      console.log(
+        '%c[CSV Provider] Split CSV mode enabled - skipping initial data load',
+        'color: #8B5CF6; font-weight: bold',
+        {
+          USE_SPLIT_CSV,
+          MARKET_DATA_BASE_URL,
+          env_USE_SPLIT_CSV: import.meta.env.VITE_USE_SPLIT_CSV,
+          env_MARKET_DATA_URL: import.meta.env.VITE_MARKET_DATA_URL
+        }
+      );
+      this.isDataLoaded = true; // Mark as loaded since we'll fetch on-demand
+      this.loadingPromise = Promise.resolve();
+    } else {
+      // Load data asynchronously and store the promise
+      this.loadingPromise = this.loadDataFromStorage().catch(error => {
+        console.error('[CSV Provider] Failed to load on construction', error);
+      });
+    }
+
     this.logInitialization();
   }
 
@@ -82,6 +100,10 @@ export class CSVProvider extends BaseProvider {
   }
 
   isConfigured(): boolean {
+    // In split CSV mode, we're always configured (fetch on-demand)
+    if (USE_SPLIT_CSV) {
+      return true;
+    }
     return this.isDataLoaded && this.cachedMarkets.size > 0;
   }
 
@@ -561,6 +583,12 @@ export class CSVProvider extends BaseProvider {
       const zhviContent = await zhviResponse.text();
       const zhviLines = zhviContent.trim().split('\n');
 
+      console.log(
+        '%c[CSV Provider] Parsing ZHVI file',
+        'color: #8B5CF6',
+        { location, marketKey, lines: zhviLines.length, firstLine: zhviLines[0].substring(0, 100) }
+      );
+
       if (zhviLines.length < 2) {
         console.warn('%c[CSV Provider] Invalid ZHVI file', 'color: #F59E0B', { location });
         return null;
@@ -569,16 +597,28 @@ export class CSVProvider extends BaseProvider {
       const zhviHeaders = zhviLines[0].split(',');
       const zhviValues = zhviLines[1].split(',');
 
+      console.log(
+        '%c[CSV Provider] Parsed ZHVI headers and values',
+        'color: #8B5CF6',
+        {
+          headers: zhviHeaders.length,
+          values: zhviValues.length,
+          regionId: zhviValues[0],
+          regionName: zhviValues[1],
+          state: zhviValues[2]
+        }
+      );
+
       // Extract basic market info
       const regionId = zhviValues[0];
       const regionName = zhviValues[1];
       const state = zhviValues[2];
       const city = regionName.split(',')[0].trim();
 
-      // Extract historical prices
+      // Extract historical prices (date columns start at index 8 after metadata columns)
       const historicalPrices: Array<{ date: string; price: number }> = [];
 
-      for (let i = 5; i < zhviHeaders.length; i++) {
+      for (let i = 8; i < zhviHeaders.length; i++) {
         const date = zhviHeaders[i];
         const price = parseFloat(zhviValues[i]);
         if (!isNaN(price)) {
@@ -616,7 +656,7 @@ export class CSVProvider extends BaseProvider {
 
           const historicalRentals: Array<{ date: string; rent: number }> = [];
 
-          for (let i = 5; i < zoriHeaders.length; i++) {
+          for (let i = 8; i < zoriHeaders.length; i++) {
             const date = zoriHeaders[i];
             const rent = parseFloat(zoriValues[i]);
             if (!isNaN(rent)) {

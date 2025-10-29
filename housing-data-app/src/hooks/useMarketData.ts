@@ -103,14 +103,32 @@ const fetchMarketData = async (
 
     const marketData = transformToMarketPriceData(marketId, marketName, stats);
 
-    // Generate historical data
-    marketData.historicalData = generateHistoricalData(
-      marketData.currentPrice,
-      marketData.changeDirection === 'up'
-        ? marketData.priceChange
-        : -marketData.priceChange,
-      12
-    );
+    // Use real historical price data if available, otherwise generate
+    if (stats.historicalPrices && stats.historicalPrices.length > 0) {
+      marketData.historicalData = stats.historicalPrices.map(h => ({
+        date: h.date,
+        price: h.price,
+        propertyType: 'single_family' as const,
+      }));
+    } else {
+      // Generate historical data as fallback
+      marketData.historicalData = generateHistoricalData(
+        marketData.currentPrice,
+        marketData.changeDirection === 'up'
+          ? marketData.priceChange
+          : -marketData.priceChange,
+        12
+      );
+    }
+
+    // Add rental historical data if available
+    if (stats.historicalRentals && stats.historicalRentals.length > 0) {
+      marketData.historicalRentals = stats.historicalRentals.map(h => ({
+        date: h.date,
+        rent: h.rent,
+        propertyType: 'single_family' as const,
+      }));
+    }
 
     return validateMarketData(marketData) ? marketData : null;
   } catch (error) {
@@ -146,7 +164,62 @@ export const useMarketData = (): UseMarketDataResult => {
     try {
       // For CSV provider, get markets directly from the loaded data
       if (providerType === 'csv' && provider instanceof CSVProvider) {
-        // Track loading progress while CSV data loads
+        // Check if using split CSV mode
+        const useSplitCSV = import.meta.env.VITE_USE_SPLIT_CSV === 'true';
+
+        if (useSplitCSV) {
+          // Split CSV mode: Fetch featured markets individually
+          console.log(
+            '%c[useMarketData] Split CSV mode - fetching featured markets on-demand',
+            'color: #8B5CF6; font-weight: bold'
+          );
+
+          // Featured cities to display (matching MOCK_MARKETS)
+          const featuredCities = [
+            { city: 'New York', state: 'NY' },
+            { city: 'Los Angeles', state: 'CA' },
+            { city: 'Austin', state: 'TX' },
+            { city: 'Columbus', state: 'OH' },
+            { city: 'Houston', state: 'TX' },
+            { city: 'San Antonio', state: 'TX' },
+          ];
+
+          setLoadingMessage('Loading featured markets...');
+
+          // Fetch each featured market individually
+          const promises = featuredCities.map(async ({ city, state }, index) => {
+            setLoadingProgress(Math.round((index / featuredCities.length) * 100));
+            return fetchMarketData(city, state, undefined, forceRefresh);
+          });
+
+          const results = await Promise.all(promises);
+          const validData = results.filter(
+            (result): result is MarketPriceData => result !== null
+          );
+
+          setLoadingProgress(100);
+          setLoadingMessage('Complete!');
+
+          if (validData.length === 0) {
+            console.warn(
+              '%c[useMarketData] No valid split CSV data - Falling back to MOCK DATA',
+              'color: #F59E0B; font-weight: bold'
+            );
+            setData(generateMockMarketData());
+          } else {
+            console.log(
+              '%c[useMarketData] ✓ Loaded featured markets via split CSV',
+              'color: #10B981; font-weight: bold',
+              { markets: validData.length }
+            );
+            setData(validData);
+          }
+
+          setLoading(false);
+          return;
+        }
+
+        // Full CSV mode: Track loading progress while CSV data loads
         const progressInterval = setInterval(() => {
           const progress = provider.getLoadingProgress();
           const message = provider.getLoadingMessage();
