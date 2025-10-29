@@ -14,6 +14,8 @@ interface UseMarketDataResult {
   error: string | null;
   refetch: () => void;
   forceRefresh: () => void;
+  loadingProgress: number;
+  loadingMessage: string;
 }
 
 /**
@@ -125,6 +127,8 @@ export const useMarketData = (): UseMarketDataResult => {
   const [data, setData] = useState<MarketPriceData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingMessage, setLoadingMessage] = useState('');
 
   const fetchData = async (forceRefresh: boolean = false) => {
     setLoading(true);
@@ -142,8 +146,21 @@ export const useMarketData = (): UseMarketDataResult => {
     try {
       // For CSV provider, get markets directly from the loaded data
       if (providerType === 'csv' && provider instanceof CSVProvider) {
+        // Track loading progress while CSV data loads
+        const progressInterval = setInterval(() => {
+          const progress = provider.getLoadingProgress();
+          const message = provider.getLoadingMessage();
+          setLoadingProgress(progress);
+          setLoadingMessage(message);
+        }, 100);
+
         // Wait for data to finish loading from IndexedDB
         await provider.waitForDataLoad();
+
+        // Clear progress tracking
+        clearInterval(progressInterval);
+        setLoadingProgress(100);
+        setLoadingMessage('Complete!');
 
         const allMarkets = provider.getAllMarkets();
 
@@ -306,5 +323,7 @@ export const useMarketData = (): UseMarketDataResult => {
     error,
     refetch: () => fetchData(false),
     forceRefresh: () => fetchData(true),
+    loadingProgress,
+    loadingMessage,
   };
 };

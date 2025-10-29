@@ -35,7 +35,7 @@ function App() {
   const isMobile = useIsMobile();
 
   // Fetch market data using the custom hook
-  const { data: marketData, loading: dataLoading, error } = useMarketData();
+  const { data: marketData, loading: dataLoading, error, loadingProgress, loadingMessage } = useMarketData();
 
   // Favorites hook
   const { favorites, toggleFavorite, isFavorited } = useFavorites();
@@ -350,6 +350,23 @@ function App() {
           onSignOut={logout}
         />
 
+        {/* CSV Loading Progress (Mobile) */}
+        {dataLoading && loadingProgress > 0 && loadingProgress < 100 && (
+          <div className="mx-4 mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4 animate-fadeIn">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+              <span className="text-sm font-medium text-blue-900">{loadingMessage}</span>
+            </div>
+            <div className="w-full bg-blue-200 rounded-full h-2 overflow-hidden">
+              <div
+                className="bg-blue-600 h-2 transition-all duration-300 ease-out"
+                style={{ width: `${loadingProgress}%` }}
+              />
+            </div>
+            <div className="text-xs text-blue-700 mt-1 text-right">{loadingProgress}%</div>
+          </div>
+        )}
+
         {/* Carousel - Show Favorites if logged in with favorites, otherwise Featured Markets */}
         <div className="pt-4 pb-2">
           {user && favorites.length > 0 ? (
@@ -555,6 +572,23 @@ function App() {
 
           {/* Main Content Area */}
           <div className="lg:col-span-3 space-y-4 sm:space-y-6">
+            {/* CSV Loading Progress (Desktop) */}
+            {dataLoading && loadingProgress > 0 && loadingProgress < 100 && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 animate-slideIn">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                  <span className="text-sm font-medium text-blue-900">{loadingMessage}</span>
+                </div>
+                <div className="w-full bg-blue-200 rounded-full h-2.5 overflow-hidden">
+                  <div
+                    className="bg-blue-600 h-2.5 transition-all duration-300 ease-out"
+                    style={{ width: `${loadingProgress}%` }}
+                  />
+                </div>
+                <div className="text-xs text-blue-700 mt-2 text-right">{loadingProgress}%</div>
+              </div>
+            )}
+
             {/* Error Message */}
             {error && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 animate-slideIn">
