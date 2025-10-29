@@ -209,22 +209,24 @@ const uploadFiles = (
   }
 
   try {
-    // Upload ZHVI files
+    // Upload ZHVI files with public-read ACL
     console.log('📊 Uploading ZHVI files...');
     exec(
       `gcloud storage cp -r "${baseDir}/zhvi/*" gs://${bucketName}/zhvi/ ` +
-      `--cache-control="${cacheControl}"`
+      `--cache-control="${cacheControl}" ` +
+      `--predefined-acl=publicRead`
     );
 
     const zhviFiles = fs.readdirSync(path.join(baseDir, 'zhvi')).filter(f => f.endsWith('.csv'));
     stats.zhviFiles = zhviFiles.length;
     console.log(`✅ Uploaded ${stats.zhviFiles} ZHVI files\n`);
 
-    // Upload ZORI files
+    // Upload ZORI files with public-read ACL
     console.log('📊 Uploading ZORI files...');
     exec(
       `gcloud storage cp -r "${baseDir}/zori/*" gs://${bucketName}/zori/ ` +
-      `--cache-control="${cacheControl}"`
+      `--cache-control="${cacheControl}" ` +
+      `--predefined-acl=publicRead`
     );
 
     const zoriFiles = fs.readdirSync(path.join(baseDir, 'zori')).filter(f => f.endsWith('.csv'));
@@ -269,6 +271,39 @@ const makePublic = (bucketName: string, dryRun: boolean): void => {
     console.log(`✅ Bucket is now publicly readable\n`);
   } catch (error) {
     console.warn('⚠️  Failed to make bucket public. You may need to do this manually.\n');
+  }
+};
+
+/**
+ * Set public ACLs on all existing objects in the bucket
+ */
+const setObjectAcls = (bucketName: string, dryRun: boolean): void => {
+  console.log('🔓 Setting public ACLs on existing objects...\n');
+
+  if (dryRun) {
+    console.log(`[DRY RUN] Would set public ACLs on all objects in gs://${bucketName}\n`);
+    return;
+  }
+
+  try {
+    // Set ACLs recursively on all objects
+    console.log('Setting ACLs on ZHVI files...');
+    exec(
+      `gcloud storage objects update "gs://${bucketName}/zhvi/**" ` +
+      `--predefined-acl=publicRead`,
+      true
+    );
+    console.log('✅ ZHVI ACLs updated\n');
+
+    console.log('Setting ACLs on ZORI files...');
+    exec(
+      `gcloud storage objects update "gs://${bucketName}/zori/**" ` +
+      `--predefined-acl=publicRead`,
+      true
+    );
+    console.log('✅ ZORI ACLs updated\n');
+  } catch (error) {
+    console.warn('⚠️  Failed to set object ACLs. Objects may already be public or you may need to do this manually.\n');
   }
 };
 
@@ -403,6 +438,8 @@ const main = async (): Promise<void> => {
   // Make bucket public
   if (options.makePublic) {
     makePublic(options.bucketName, options.dryRun);
+    // Also set ACLs on all uploaded objects
+    setObjectAcls(options.bucketName, options.dryRun);
   }
 
   // Set up CDN (optional)
