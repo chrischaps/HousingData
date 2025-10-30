@@ -15,7 +15,7 @@ interface CompactMarketCardProps {
 export const CompactMarketCard = ({ market, onClick, isSelected = false }: CompactMarketCardProps) => {
   const isPositive = market.changeDirection === 'up';
   const arrow = isPositive ? '↑' : '↓';
-  const changeColor = isPositive ? 'text-green-600' : 'text-red-600';
+  const changeColor = isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
   const lineColor = isPositive ? '#10B981' : '#EF4444';
 
   // Prepare data for mini chart (use ALL historical data for MAX timescale)
@@ -27,19 +27,19 @@ export const CompactMarketCard = ({ market, onClick, isSelected = false }: Compa
       className={`
         flex-shrink-0 w-36 h-32 rounded-lg p-3 cursor-pointer transition-all
         ${isSelected
-          ? 'bg-blue-50 border-2 border-blue-500 shadow-md'
-          : 'bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md'
+          ? 'bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-500 dark:border-blue-400 shadow-md'
+          : 'bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600 hover:shadow-md'
         }
       `}
     >
       <div className="flex flex-col h-full">
         {/* Market name (truncated) */}
-        <div className="text-xs font-medium text-gray-900 truncate mb-1">
+        <div className="text-xs font-medium text-gray-900 dark:text-white truncate mb-1">
           {market.marketName}
         </div>
 
         {/* Current price */}
-        <div className="text-base font-bold text-gray-900 mb-1">
+        <div className="text-base font-bold text-gray-900 dark:text-white mb-1">
           {formatPrice(market.currentPrice)}
         </div>
 

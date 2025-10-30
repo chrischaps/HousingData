@@ -41,27 +41,27 @@ export const FavoritesCarousel = ({
       {/* Section header */}
       <div className="flex items-center justify-between mb-3 px-4">
         <div className="flex items-center gap-2">
-          <h2 className="text-lg font-semibold text-gray-900">My Favorites</h2>
-          <span className="text-yellow-600 text-lg">★</span>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">My Favorites</h2>
+          <span className="text-yellow-600 dark:text-yellow-400 text-lg">★</span>
         </div>
 
         {/* Scroll buttons - hidden on mobile, shown on larger screens */}
         <div className="hidden sm:flex gap-2">
           <button
             onClick={() => scroll('left')}
-            className="p-1.5 rounded-full bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
+            className="p-1.5 rounded-full bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors"
             aria-label="Scroll left"
           >
-            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
           <button
             onClick={() => scroll('right')}
-            className="p-1.5 rounded-full bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
+            className="p-1.5 rounded-full bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors"
             aria-label="Scroll right"
           >
-            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
@@ -91,7 +91,7 @@ export const FavoritesCarousel = ({
             </div>
           ))
         ) : (
-          <div className="flex-1 flex items-center justify-center py-8 text-gray-500 text-sm">
+          <div className="flex-1 flex items-center justify-center py-8 text-gray-500 dark:text-gray-400 text-sm">
             No favorites yet
           </div>
         )}
