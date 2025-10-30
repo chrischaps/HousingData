@@ -2,6 +2,40 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Task Tracking and Issue Management
+
+**IMPORTANT**: This project uses GitHub Issues for task tracking and project management.
+
+**Before starting any new feature or bugfix:**
+1. **Check for existing issue**: Use `gh issue list` to see if an issue already exists
+2. **Create a new issue**: If no issue exists, create one with `gh issue create`
+   - Provide clear title and description
+   - Include expected vs. current behavior for bugs
+   - Suggest implementation approach when applicable
+   - Add appropriate labels (`bug`, `enhancement`, etc.)
+3. **Reference issue in commits**: Include issue number in commit messages (e.g., "fixes #3" or "closes #5")
+4. **Link PRs to issues**: When creating pull requests, reference the related issue
+
+**Creating Issues:**
+```bash
+# Create a bug report
+gh issue create --title "fix: Brief description" --body "Detailed description" --label "bug"
+
+# Create a feature request
+gh issue create --title "feat: Brief description" --body "Detailed description" --label "enhancement"
+
+# List all open issues
+gh issue list
+
+# View a specific issue
+gh issue view 3
+```
+
+**Commit Message Format:**
+- Use conventional commits format: `type: description`
+- Reference issues: `fix: Resolve chart padding issue (fixes #7)`
+- Types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `style`
+
 ## Development Environment
 
 **Shell Environment**: The Bash tool runs `/usr/bin/bash` (Unix shell), NOT PowerShell
