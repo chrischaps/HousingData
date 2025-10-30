@@ -1,7 +1,7 @@
 {
   "name": "housing-data-app",
   "private": true,
-  "version": "0.6.0",
+  "version": "0.7.0",
   "type": "module",
   "description": "Production housing market data visualization and analysis platform with Firebase authentication",
   "scripts": {

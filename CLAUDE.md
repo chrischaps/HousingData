@@ -55,7 +55,7 @@ This is a housing market data visualization web application modeled after Google
 
 **Current Status**: Production app with Firebase authentication, Firestore favorites, market comparison, and split CSV optimization
 - **POC (housing-data-poc)**: Complete proof of concept with CSV data loading, charts, Cloud Run deployment (v0.3.0)
-- **Production App (housing-data-app)**: Feature-complete MVP (v0.6.0) with real-time favorites, comparison, and on-demand data loading via split CSV from Cloud Storage (99.5% reduction in initial page load: 85.6 MB → ~420 KB)
+- **Production App (housing-data-app)**: Feature-complete MVP (v0.7.0) with real-time favorites, comparison, and on-demand data loading via split CSV from Cloud Storage (99.5% reduction in initial page load: 85.6 MB → ~420 KB)
 
 ## Repository Structure
 
@@ -84,7 +84,7 @@ HousingData/
 │   │   └── utils/             # Formatters, CSV parser, cache
 │   ├── .env.example           # Firebase config template
 │   ├── firestore.rules        # Security rules ⭐
-│   ├── package.json           # v0.6.0
+│   ├── package.json           # v0.7.0
 │   └── README.md              # Production app docs
 │
 ├── scripts/                       # Build and deployment scripts
@@ -133,6 +133,47 @@ git push origin master
 - `fix/description` - Bug fixes
 - `refactor/description` - Code refactoring
 - `docs/description` - Documentation updates
+
+### Version Management
+
+**IMPORTANT**: Update the version number in `housing-data-app/package.json` before merging to prod for any user-facing changes.
+
+**Semantic Versioning (semver)**:
+- **MAJOR** (x.0.0): Breaking changes, major features
+- **MINOR** (0.x.0): New features, non-breaking changes (e.g., split CSV optimization, rental data overlay)
+- **PATCH** (0.0.x): Bug fixes, documentation updates
+
+**Workflow Before Merging to Prod**:
+
+1. **Determine version bump type**:
+   - New feature? → MINOR version (0.6.0 → 0.7.0)
+   - Bug fix? → PATCH version (0.6.0 → 0.6.1)
+   - Breaking change? → MAJOR version (0.6.0 → 1.0.0)
+
+2. **Update version in package.json**:
+   ```powershell
+   # Open housing-data-app/package.json
+   # Change "version": "0.6.0" to "0.7.0"
+   ```
+
+3. **Commit version bump**:
+   ```powershell
+   git add housing-data-app/package.json
+   git commit -m "chore: Bump version to 0.7.0"
+   ```
+
+4. **Then merge to prod**:
+   ```powershell
+   git checkout prod
+   git merge master
+   git push origin prod
+   ```
+
+**Examples of Recent Features and Their Version Bumps**:
+- Split CSV optimization (85MB → 420KB) → v0.6.0 → v0.7.0 (MINOR)
+- Rental data overlay with dual-axis charts → v0.5.0 → v0.6.0 (MINOR)
+- Fix CORS configuration → v0.6.0 → v0.6.1 (PATCH)
+- Documentation updates only → No version bump needed (unless releasing docs as a version)
 
 ### Common Git Issues and Solutions
 
