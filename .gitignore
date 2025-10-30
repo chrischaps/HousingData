@@ -43,3 +43,7 @@ lerna-debug.log*
 .temp/
 .tmp/
 *.tsbuildinfo
+
+# Claude Code settings (local user settings)
+.claude/
+**/.claude/
