@@ -16,7 +16,17 @@ import { useTheme } from '../contexts/ThemeContext';
 
 // Color palette for comparison markets
 const COMPARISON_COLORS = [
-  '#1E40AF', // Primary blue - Home values
+  '#1E40AF', // Primary blue - Home values (light mode)
+  '#EF4444', // Red
+  '#10B981', // Green
+  '#F59E0B', // Amber - Rentals
+  '#8B5CF6', // Purple
+  '#EC4899', // Pink
+];
+
+// Lighter blue for dark mode to improve readability
+const COMPARISON_COLORS_DARK = [
+  '#60A5FA', // Lighter blue - Home values (dark mode: blue-400)
   '#EF4444', // Red
   '#10B981', // Green
   '#F59E0B', // Amber - Rentals
@@ -70,6 +80,10 @@ export const PriceChart = ({
 }: PriceChartProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const { theme } = useTheme();
+
+  // Get appropriate color palette based on theme
+  const colors = theme === 'dark' ? COMPARISON_COLORS_DARK : COMPARISON_COLORS;
+  const primaryBlue = colors[0];
 
   // Filter data based on time range
   const filteredData = filterDataByTimeRange(data, timeRange);
@@ -224,9 +238,9 @@ export const PriceChart = ({
           <YAxis
             yAxisId="left"
             tickFormatter={(price) => formatPriceShort(price)}
-            stroke={COMPARISON_COLORS[0]}
+            stroke={hasRentalOverlay ? primaryBlue : (theme === 'dark' ? '#94a3b8' : '#6B7280')}
             style={{ fontSize: '12px' }}
-            label={hasRentalOverlay ? { value: 'Home Value', angle: -90, position: 'insideLeft', style: { fontSize: '12px', fill: COMPARISON_COLORS[0] } } : undefined}
+            label={hasRentalOverlay ? { value: 'Home Value', angle: -90, position: 'insideLeft', style: { fontSize: '12px', fill: primaryBlue } } : undefined}
           />
 
           {/* Right Y-axis for rental prices */}
@@ -255,7 +269,7 @@ export const PriceChart = ({
             type="monotone"
             dataKey="primary"
             name={primaryMarketName ? `${primaryMarketName} Home Values` : "Home Values"}
-            stroke={COMPARISON_COLORS[0]}
+            stroke={primaryBlue}
             strokeWidth={2}
             dot={false}
             activeDot={{ r: 6 }}
