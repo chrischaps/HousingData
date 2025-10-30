@@ -12,6 +12,7 @@ import {
 import type { PriceChartProps } from '../types';
 import { formatPriceShort, formatDate, formatPrice } from '../utils/formatters';
 import { filterDataByTimeRange } from '../hooks/useHistoricalPrices';
+import { useTheme } from '../contexts/ThemeContext';
 
 // Color palette for comparison markets
 const COMPARISON_COLORS = [
@@ -68,6 +69,7 @@ export const PriceChart = ({
   showRentalOverlay = false
 }: PriceChartProps) => {
   const [isLoading, setIsLoading] = useState(true);
+  const { theme } = useTheme();
 
   // Filter data based on time range
   const filteredData = filterDataByTimeRange(data, timeRange);
@@ -210,12 +212,11 @@ export const PriceChart = ({
           data={mergedData}
           margin={{ top: 5, right: hasRentalOverlay ? 15 : 10, left: 0, bottom: (hasComparisons || hasRentalOverlay) ? 25 : 5 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" className="dark:stroke-slate-700" />
+          <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#334155' : '#E5E7EB'} />
           <XAxis
             dataKey="date"
             tickFormatter={(date) => formatDate(date)}
-            stroke="#6B7280"
-            className="dark:stroke-slate-400"
+            stroke={theme === 'dark' ? '#94a3b8' : '#6B7280'}
             style={{ fontSize: '12px' }}
           />
 
