@@ -224,7 +224,7 @@ export const PriceChart = ({
           <YAxis
             yAxisId="left"
             tickFormatter={(price) => formatPriceShort(price)}
-            stroke={COMPARISON_COLORS[0]}
+            stroke={hasRentalOverlay ? COMPARISON_COLORS[0] : (theme === 'dark' ? '#94a3b8' : '#6B7280')}
             style={{ fontSize: '12px' }}
             label={hasRentalOverlay ? { value: 'Home Value', angle: -90, position: 'insideLeft', style: { fontSize: '12px', fill: COMPARISON_COLORS[0] } } : undefined}
           />
