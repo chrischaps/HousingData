@@ -8,6 +8,7 @@ import { MarketSearch } from './components/MarketSearch';
 import { SettingsPanel } from './components/SettingsPanel';
 import { FavoritesPanel } from './components/FavoritesPanel';
 import { MobileHeader } from './components/MobileHeader';
+import { MobileSettingsModal } from './components/MobileSettingsModal';
 import { FeaturedMarketsCarousel } from './components/FeaturedMarketsCarousel';
 import { FavoritesCarousel } from './components/FavoritesCarousel';
 import { BottomSearchBar } from './components/BottomSearchBar';
@@ -31,6 +32,7 @@ function App() {
   const [comparisonMarkets, setComparisonMarkets] = useState<MarketPriceData[]>([]);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRentalOverlay, setShowRentalOverlay] = useState(false);
+  const [showMobileSettings, setShowMobileSettings] = useState(false);
 
   // Detect mobile screen
   const isMobile = useIsMobile();
@@ -344,6 +346,7 @@ function App() {
           authLoading={authLoading}
           onSignIn={() => setShowLoginModal(true)}
           onSignOut={logout}
+          onShowSettings={() => setShowMobileSettings(true)}
         />
 
         {/* CSV Loading Progress (Mobile) */}
@@ -525,6 +528,13 @@ function App() {
             </div>
           </div>
         )}
+
+        {/* Mobile Settings Modal */}
+        <MobileSettingsModal
+          isOpen={showMobileSettings}
+          onClose={() => setShowMobileSettings(false)}
+          onDataChange={() => window.location.reload()}
+        />
       </div>
     );
   }
