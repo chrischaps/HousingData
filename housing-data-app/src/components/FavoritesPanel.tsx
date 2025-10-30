@@ -32,10 +32,10 @@ export const FavoritesPanel = ({ onSelectMarket, onAddToComparison }: FavoritesP
   // Not signed in
   if (!user) {
     return (
-      <div className="bg-white rounded-lg shadow p-4">
-        <h2 className="text-xl font-bold mb-4 text-gray-900">My Favorites</h2>
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-slate-900/50 p-4">
+        <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">My Favorites</h2>
         <div className="text-center py-8">
-          <p className="text-gray-500 text-sm">
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
             Sign in to save your favorite markets
           </p>
         </div>
@@ -46,14 +46,14 @@ export const FavoritesPanel = ({ onSelectMarket, onAddToComparison }: FavoritesP
   // Loading state
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow p-4">
-        <h2 className="text-xl font-bold mb-4 text-gray-900">My Favorites</h2>
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-slate-900/50 p-4">
+        <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">My Favorites</h2>
         <div className="text-center py-8">
           <div className="animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-3/4 mb-2 mx-auto"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
+            <div className="h-4 bg-gray-200 dark:bg-slate-700 rounded w-3/4 mb-2 mx-auto"></div>
+            <div className="h-4 bg-gray-200 dark:bg-slate-700 rounded w-1/2 mx-auto"></div>
           </div>
-          <p className="text-gray-500 text-sm mt-4">Loading favorites...</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-4">Loading favorites...</p>
         </div>
       </div>
     );
@@ -62,10 +62,10 @@ export const FavoritesPanel = ({ onSelectMarket, onAddToComparison }: FavoritesP
   // Error state
   if (error) {
     return (
-      <div className="bg-white rounded-lg shadow p-4">
-        <h2 className="text-xl font-bold mb-4 text-gray-900">My Favorites</h2>
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-slate-900/50 p-4">
+        <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">My Favorites</h2>
         <div className="text-center py-8">
-          <p className="text-red-600 text-sm">{error}</p>
+          <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
         </div>
       </div>
     );
@@ -74,10 +74,10 @@ export const FavoritesPanel = ({ onSelectMarket, onAddToComparison }: FavoritesP
   // Empty state
   if (favorites.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow p-4">
-        <h2 className="text-xl font-bold mb-4 text-gray-900">My Favorites</h2>
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-slate-900/50 p-4">
+        <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">My Favorites</h2>
         <div className="text-center py-8">
-          <p className="text-gray-500 text-sm">
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
             No favorites yet. Click the "Add to Favorites" button on any market card to get started!
           </p>
         </div>
@@ -87,10 +87,10 @@ export const FavoritesPanel = ({ onSelectMarket, onAddToComparison }: FavoritesP
 
   // Favorites list
   return (
-    <div className="bg-white rounded-lg shadow p-4">
+    <div className="bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-slate-900/50 p-4">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-gray-900">My Favorites</h2>
-        <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">My Favorites</h2>
+        <span className="text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-slate-700 px-2 py-1 rounded">
           {favorites.length} {favorites.length === 1 ? 'market' : 'markets'}
         </span>
       </div>
@@ -111,8 +111,8 @@ export const FavoritesPanel = ({ onSelectMarket, onAddToComparison }: FavoritesP
         ))}
       </div>
 
-      <div className="mt-4 pt-4 border-t border-gray-200">
-        <p className="text-xs text-gray-500 text-center">
+      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-slate-700">
+        <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
           Click any market to view details
         </p>
       </div>

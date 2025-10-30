@@ -16,8 +16,8 @@ export const TimeRangeSelector = ({ selected, onChange }: TimeRangeSelectorProps
             onClick={() => onChange(range)}
             className={
               isSelected
-                ? 'px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-medium transition-colors bg-blue-600 text-white'
-                : 'px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-medium transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300 active:bg-gray-400'
+                ? 'px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-medium transition-colors bg-blue-600 dark:bg-blue-500 text-white'
+                : 'px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-medium transition-colors bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-slate-600 active:bg-gray-400 dark:active:bg-slate-500'
             }
           >
             {range}

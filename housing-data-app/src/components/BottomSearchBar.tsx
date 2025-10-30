@@ -41,12 +41,12 @@ export const BottomSearchBar = ({ onSelectMarket, onAddToComparison }: BottomSea
   return (
     <>
       {/* Fixed bottom search button */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-40">
+      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 p-4 z-40">
         <button
           onClick={() => setShowSearchModal(true)}
-          className="w-full px-4 py-3 bg-gray-100 rounded-full text-left text-gray-600 hover:bg-gray-200 transition-colors flex items-center gap-3"
+          className="w-full px-4 py-3 bg-gray-100 dark:bg-slate-700 rounded-full text-left text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors flex items-center gap-3"
         >
-          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <span>Search markets...</span>
@@ -55,18 +55,18 @@ export const BottomSearchBar = ({ onSelectMarket, onAddToComparison }: BottomSea
 
       {/* Full-screen search modal */}
       {showSearchModal && (
-        <div className="fixed inset-0 bg-white z-50 flex flex-col animate-fadeIn">
+        <div className="fixed inset-0 bg-white dark:bg-slate-900 z-50 flex flex-col animate-fadeIn">
           {/* Modal header */}
-          <div className="bg-white border-b border-gray-200 p-4 flex items-center gap-3">
+          <div className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 p-4 flex items-center gap-3">
             <button
               onClick={() => {
                 setShowSearchModal(false);
                 setQuery('');
                 clearResults();
               }}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full transition-colors"
             >
-              <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
             </button>
@@ -75,7 +75,7 @@ export const BottomSearchBar = ({ onSelectMarket, onAddToComparison }: BottomSea
               value={query}
               onChange={(e) => handleInputChange(e.target.value)}
               placeholder="Search by city or ZIP code..."
-              className="flex-1 px-4 py-2 bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-4 py-2 bg-gray-100 dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
               autoFocus
             />
           </div>
@@ -84,15 +84,15 @@ export const BottomSearchBar = ({ onSelectMarket, onAddToComparison }: BottomSea
           <div className="flex-1 overflow-y-auto">
             {/* Loading state */}
             {loading && (
-              <div className="p-4 text-center text-gray-500">
+              <div className="p-4 text-center text-gray-500 dark:text-gray-400">
                 Searching...
               </div>
             )}
 
             {/* Error state */}
             {error && !loading && (
-              <div className="p-4 bg-yellow-50 border-b border-yellow-200">
-                <p className="text-sm text-yellow-800">{error}</p>
+              <div className="p-4 bg-yellow-50 dark:bg-yellow-900/30 border-b border-yellow-200 dark:border-yellow-800">
+                <p className="text-sm text-yellow-800 dark:text-yellow-200">{error}</p>
               </div>
             )}
 
@@ -100,22 +100,22 @@ export const BottomSearchBar = ({ onSelectMarket, onAddToComparison }: BottomSea
             {results.length > 0 && !loading && (
               <div>
                 {totalCount > results.length && (
-                  <div className="bg-blue-50 border-b border-blue-200 px-4 py-2 text-sm text-blue-800">
+                  <div className="bg-blue-50 dark:bg-blue-900/30 border-b border-blue-200 dark:border-blue-800 px-4 py-2 text-sm text-blue-800 dark:text-blue-200">
                     Showing {results.length} of {totalCount} results
                   </div>
                 )}
                 {results.map((market) => (
                   <div
                     key={market.id}
-                    className="p-4 border-b border-gray-200 active:bg-gray-100"
+                    className="p-4 border-b border-gray-200 dark:border-slate-700 active:bg-gray-100 dark:active:bg-slate-800"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div
                         onClick={() => handleSelectMarket(market)}
                         className="flex-1 min-w-0 cursor-pointer"
                       >
-                        <p className="font-medium text-gray-900">{market.name}</p>
-                        <p className="text-sm text-gray-500">
+                        <p className="font-medium text-gray-900 dark:text-white">{market.name}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
                           {market.city}, {market.state}
                           {market.zipCode && ` • ${market.zipCode}`}
                         </p>
@@ -126,7 +126,7 @@ export const BottomSearchBar = ({ onSelectMarket, onAddToComparison }: BottomSea
                             e.stopPropagation();
                             handleAddToComparison(market);
                           }}
-                          className="text-purple-600 hover:text-purple-900 hover:bg-purple-50 font-medium text-sm px-3 py-2 rounded transition-all"
+                          className="text-purple-600 dark:text-purple-400 hover:text-purple-900 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/30 font-medium text-sm px-3 py-2 rounded transition-all"
                           title="Add to comparison"
                         >
                           ⚖️
@@ -140,14 +140,14 @@ export const BottomSearchBar = ({ onSelectMarket, onAddToComparison }: BottomSea
 
             {/* No results */}
             {query.length >= 2 && results.length === 0 && !loading && !error && (
-              <div className="p-8 text-center text-gray-500">
+              <div className="p-8 text-center text-gray-500 dark:text-gray-400">
                 No markets found for "{query}"
               </div>
             )}
 
             {/* Empty state */}
             {query.length < 2 && (
-              <div className="p-8 text-center text-gray-500">
+              <div className="p-8 text-center text-gray-500 dark:text-gray-400">
                 <p className="mb-2">Search for markets by city or ZIP code</p>
                 <p className="text-sm">Try "Detroit" or "48201"</p>
               </div>

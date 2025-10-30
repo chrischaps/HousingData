@@ -12,6 +12,7 @@ import {
 import type { PriceChartProps } from '../types';
 import { formatPriceShort, formatDate, formatPrice } from '../utils/formatters';
 import { filterDataByTimeRange } from '../hooks/useHistoricalPrices';
+import { useTheme } from '../contexts/ThemeContext';
 
 // Color palette for comparison markets
 const COMPARISON_COLORS = [
@@ -68,6 +69,7 @@ export const PriceChart = ({
   showRentalOverlay = false
 }: PriceChartProps) => {
   const [isLoading, setIsLoading] = useState(true);
+  const { theme } = useTheme();
 
   // Filter data based on time range
   const filteredData = filterDataByTimeRange(data, timeRange);
@@ -157,11 +159,11 @@ export const PriceChart = ({
   // If no data, show placeholder
   if (!mergedData || mergedData.length === 0) {
     return (
-      <div className="w-full h-96 bg-white rounded-lg shadow p-4">
+      <div className="w-full h-96 bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-slate-900/50 p-4">
         <div className="flex items-center justify-center h-full">
           <div className="text-center">
-            <p className="text-gray-500">No historical data available</p>
-            <p className="text-gray-400 text-sm mt-2">
+            <p className="text-gray-500 dark:text-gray-400">No historical data available</p>
+            <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">
               Select a different time range or market
             </p>
           </div>
@@ -174,8 +176,8 @@ export const PriceChart = ({
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white border border-gray-300 rounded-lg shadow-lg p-3">
-          <p className="text-xs text-gray-500 mb-2">{formatDate(payload[0].payload.date)}</p>
+        <div className="bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-lg shadow-lg p-3">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{formatDate(payload[0].payload.date)}</p>
           {payload.map((entry: any, index: number) => {
             const isRental = entry.dataKey === 'rental';
             const displayValue = isRental
@@ -188,7 +190,7 @@ export const PriceChart = ({
                   className="w-3 h-3 rounded-full"
                   style={{ backgroundColor: entry.stroke }}
                 />
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
                   {entry.name}: {displayValue}
                 </p>
               </div>
@@ -204,17 +206,17 @@ export const PriceChart = ({
   const hasRentalOverlay = showRentalOverlay && filteredRentalData && filteredRentalData.length > 0;
 
   return (
-    <div className="w-full h-72 sm:h-80 md:h-96 bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 animate-fadeIn outline-none" tabIndex={-1}>
+    <div className="w-full h-72 sm:h-80 md:h-96 bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-slate-900/50 p-3 sm:p-4 md:p-6 animate-fadeIn outline-none" tabIndex={-1}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
           data={mergedData}
           margin={{ top: 5, right: hasRentalOverlay ? 15 : 10, left: 0, bottom: (hasComparisons || hasRentalOverlay) ? 25 : 5 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+          <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#334155' : '#E5E7EB'} />
           <XAxis
             dataKey="date"
             tickFormatter={(date) => formatDate(date)}
-            stroke="#6B7280"
+            stroke={theme === 'dark' ? '#94a3b8' : '#6B7280'}
             style={{ fontSize: '12px' }}
           />
 

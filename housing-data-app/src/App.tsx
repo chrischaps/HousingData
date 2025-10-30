@@ -337,7 +337,7 @@ function App() {
   if (isMobile) {
     // MOBILE LAYOUT (Google Finance style)
     return (
-      <div className="min-h-screen bg-gray-50 pb-20">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pb-20">
         {/* Mobile Header */}
         <MobileHeader
           user={user}
@@ -348,18 +348,18 @@ function App() {
 
         {/* CSV Loading Progress (Mobile) */}
         {dataLoading && loadingProgress > 0 && loadingProgress < 100 && (
-          <div className="mx-4 mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4 animate-fadeIn">
+          <div className="mx-4 mt-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 animate-fadeIn">
             <div className="flex items-center gap-3 mb-2">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-              <span className="text-sm font-medium text-blue-900">{loadingMessage}</span>
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 dark:border-blue-400"></div>
+              <span className="text-sm font-medium text-blue-900 dark:text-blue-100">{loadingMessage}</span>
             </div>
-            <div className="w-full bg-blue-200 rounded-full h-2 overflow-hidden">
+            <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2 overflow-hidden">
               <div
-                className="bg-blue-600 h-2 transition-all duration-300 ease-out"
+                className="bg-blue-600 dark:bg-blue-400 h-2 transition-all duration-300 ease-out"
                 style={{ width: `${loadingProgress}%` }}
               />
             </div>
-            <div className="text-xs text-blue-700 mt-1 text-right">{loadingProgress}%</div>
+            <div className="text-xs text-blue-700 dark:text-blue-300 mt-1 text-right">{loadingProgress}%</div>
           </div>
         )}
 
@@ -388,15 +388,15 @@ function App() {
             <div className="mb-3 space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-semibold text-gray-900">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                     {selectedMarket.marketName}
                   </h2>
                   <button
                     onClick={() => handleToggleFavorite(selectedMarket.marketId, selectedMarket.marketName)}
                     className={
                       isFavorited(selectedMarket.marketId)
-                        ? 'text-yellow-600 hover:text-yellow-800 text-xl'
-                        : 'text-blue-600 hover:text-blue-900 text-xl'
+                        ? 'text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-300 text-xl'
+                        : 'text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 text-xl'
                     }
                     title={isFavorited(selectedMarket.marketId) ? 'Remove from favorites' : 'Add to favorites'}
                   >
@@ -415,8 +415,8 @@ function App() {
                   onClick={() => setShowRentalOverlay(!showRentalOverlay)}
                   className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${
                     showRentalOverlay
-                      ? 'bg-amber-100 text-amber-800 hover:bg-amber-200'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-900/50'
+                      : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600'
                   }`}
                 >
                   {showRentalOverlay ? '✓ Showing Rentals' : '+ Show Rentals'}
@@ -426,11 +426,11 @@ function App() {
 
             {/* Current Price Display */}
             <div className="mb-4">
-              <div className="text-3xl font-bold text-gray-900">
+              <div className="text-3xl font-bold text-gray-900 dark:text-white">
                 {formatPrice(selectedMarket.currentPrice)}
               </div>
               <div className={`text-sm font-medium ${
-                selectedMarket.changeDirection === 'up' ? 'text-green-600' : 'text-red-600'
+                selectedMarket.changeDirection === 'up' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
               }`}>
                 {selectedMarket.changeDirection === 'up' ? '↑' : '↓'} {formatPercentage(selectedMarket.changeDirection === 'up' ? selectedMarket.priceChange : -Math.abs(selectedMarket.priceChange))}
               </div>
@@ -453,12 +453,12 @@ function App() {
 
         {/* Error Message */}
         {error && (
-          <div className="mx-4 mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+          <div className="mx-4 mt-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
             <div className="flex items-start gap-2">
-              <span className="text-yellow-600">⚠️</span>
+              <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
               <div className="flex-1">
-                <p className="text-xs font-medium text-yellow-900">Data Loading Issue</p>
-                <p className="text-xs text-yellow-800 mt-1">{error}</p>
+                <p className="text-xs font-medium text-yellow-900 dark:text-yellow-100">Data Loading Issue</p>
+                <p className="text-xs text-yellow-800 dark:text-yellow-200 mt-1">{error}</p>
               </div>
             </div>
           </div>
@@ -473,18 +473,18 @@ function App() {
         {/* Login Modal */}
         {showLoginModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative animate-fadeIn">
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full p-6 relative animate-fadeIn">
               <button
                 onClick={() => setShowLoginModal(false)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+                className="absolute top-4 right-4 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
               <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Sign In</h2>
-                <p className="text-gray-600 mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Sign In</h2>
+                <p className="text-gray-600 dark:text-gray-300 mb-6">
                   Sign in to save your favorite markets and sync across devices
                 </p>
                 <button
@@ -496,7 +496,7 @@ function App() {
                       console.error('Login failed:', error);
                     }
                   }}
-                  className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white border-2 border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all shadow-sm hover:shadow"
+                  className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white dark:bg-slate-700 border-2 border-gray-300 dark:border-slate-600 rounded-lg font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-600 hover:border-gray-400 dark:hover:border-slate-500 transition-all shadow-sm hover:shadow"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path
@@ -518,7 +518,7 @@ function App() {
                   </svg>
                   Continue with Google
                 </button>
-                <p className="text-xs text-gray-500 mt-4">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">
                   No account required - sign in with your Google account
                 </p>
               </div>
@@ -531,29 +531,29 @@ function App() {
 
   // DESKTOP LAYOUT (Original layout)
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-white dark:bg-slate-800 shadow-sm dark:shadow-slate-900/50">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <img src="/assets/ccc-logo.png" alt="CCC Logo" className="h-8 w-auto" />
               <h1 className="text-2xl font-bold">
-                <span className="text-gray-900">Market</span>{' '}
-                <span className="text-blue-600">Pulse</span>
+                <span className="text-gray-900 dark:text-white">Market</span>{' '}
+                <span className="text-blue-600 dark:text-blue-400">Pulse</span>
               </h1>
             </div>
             <div className="flex items-center gap-4">
               {authLoading ? (
-                <div className="text-sm text-gray-500">Loading...</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">Loading...</div>
               ) : user ? (
                 <>
-                  <div className="text-sm text-gray-700">
+                  <div className="text-sm text-gray-700 dark:text-gray-300">
                     {user.displayName || user.email}
                   </div>
                   <button
                     onClick={logout}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
                   >
                     Sign Out
                   </button>
@@ -561,7 +561,7 @@ function App() {
               ) : (
                 <button
                   onClick={() => setShowLoginModal(true)}
-                  className="px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm hover:shadow-md"
+                  className="px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 rounded-lg transition-colors shadow-sm hover:shadow-md"
                 >
                   Sign In
                 </button>
@@ -588,34 +588,34 @@ function App() {
           <div className="lg:col-span-3 space-y-4 sm:space-y-6">
             {/* CSV Loading Progress (Desktop) */}
             {dataLoading && loadingProgress > 0 && loadingProgress < 100 && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 animate-slideIn">
+              <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 animate-slideIn">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                  <span className="text-sm font-medium text-blue-900">{loadingMessage}</span>
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 dark:border-blue-400"></div>
+                  <span className="text-sm font-medium text-blue-900 dark:text-blue-100">{loadingMessage}</span>
                 </div>
-                <div className="w-full bg-blue-200 rounded-full h-2.5 overflow-hidden">
+                <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2.5 overflow-hidden">
                   <div
-                    className="bg-blue-600 h-2.5 transition-all duration-300 ease-out"
+                    className="bg-blue-600 dark:bg-blue-400 h-2.5 transition-all duration-300 ease-out"
                     style={{ width: `${loadingProgress}%` }}
                   />
                 </div>
-                <div className="text-xs text-blue-700 mt-2 text-right">{loadingProgress}%</div>
+                <div className="text-xs text-blue-700 dark:text-blue-300 mt-2 text-right">{loadingProgress}%</div>
               </div>
             )}
 
             {/* Error Message */}
             {error && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 animate-slideIn">
+              <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 animate-slideIn">
                 <div className="flex items-start gap-3">
-                  <span className="text-yellow-600 text-xl flex-shrink-0">⚠️</span>
+                  <span className="text-yellow-600 dark:text-yellow-400 text-xl flex-shrink-0">⚠️</span>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-yellow-900 mb-1">
+                    <p className="text-sm font-medium text-yellow-900 dark:text-yellow-100 mb-1">
                       Data Loading Issue
                     </p>
-                    <p className="text-sm text-yellow-800">
+                    <p className="text-sm text-yellow-800 dark:text-yellow-200">
                       {error}
                     </p>
-                    <p className="text-xs text-yellow-700 mt-2">
+                    <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-2">
                       Showing sample data for demonstration.
                     </p>
                   </div>
@@ -625,7 +625,7 @@ function App() {
 
             {/* Market Cards Grid */}
             <section>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                 Featured Markets
               </h2>
 
@@ -654,8 +654,8 @@ function App() {
 
               {/* No Data State */}
               {!dataLoading && marketData.length === 0 && (
-                <div className="bg-gray-50 rounded-lg p-8 text-center">
-                  <p className="text-gray-500">No market data available</p>
+                <div className="bg-gray-50 dark:bg-slate-800 rounded-lg p-8 text-center">
+                  <p className="text-gray-500 dark:text-gray-400">No market data available</p>
                 </div>
               )}
             </section>
@@ -665,10 +665,10 @@ function App() {
               <section className="space-y-3 sm:space-y-4 animate-fadeIn">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+                    <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
                       {selectedMarket.marketName}
                       {comparisonMarkets.length > 0 && (
-                        <span className="text-sm text-gray-500 ml-2">
+                        <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
                           vs {comparisonMarkets.length} {comparisonMarkets.length === 1 ? 'market' : 'markets'}
                         </span>
                       )}
@@ -677,8 +677,8 @@ function App() {
                       onClick={() => handleToggleFavorite(selectedMarket.marketId, selectedMarket.marketName)}
                       className={
                         isFavorited(selectedMarket.marketId)
-                          ? 'text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50 font-medium text-lg px-3 py-1.5 rounded transition-all hover:scale-110'
-                          : 'text-blue-600 hover:text-blue-900 hover:bg-blue-50 font-medium text-lg px-3 py-1.5 rounded transition-all hover:scale-110'
+                          ? 'text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-300 hover:bg-yellow-50 dark:hover:bg-yellow-900/30 font-medium text-lg px-3 py-1.5 rounded transition-all hover:scale-110'
+                          : 'text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 font-medium text-lg px-3 py-1.5 rounded transition-all hover:scale-110'
                       }
                       title={isFavorited(selectedMarket.marketId) ? 'Remove from favorites' : 'Add to favorites'}
                     >
@@ -692,8 +692,8 @@ function App() {
                         onClick={() => setShowRentalOverlay(!showRentalOverlay)}
                         className={`text-xs sm:text-sm px-3 py-1.5 rounded-full font-medium transition-colors ${
                           showRentalOverlay
-                            ? 'bg-amber-100 text-amber-800 hover:bg-amber-200'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-900/50'
+                            : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600'
                         }`}
                       >
                         {showRentalOverlay ? '✓ Showing Rentals' : '+ Show Rentals'}
@@ -708,11 +708,11 @@ function App() {
 
                 {/* Comparison Panel */}
                 {comparisonMarkets.length > 0 && (
-                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                  <div className="bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800 rounded-lg p-3">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="text-sm font-medium text-purple-900">
+                          <span className="text-sm font-medium text-purple-900 dark:text-purple-100">
                             ⚖️ Comparing with:
                           </span>
                         </div>
@@ -720,16 +720,16 @@ function App() {
                           {comparisonMarkets.map((market, index) => (
                             <div
                               key={market.marketId}
-                              className="inline-flex items-center gap-2 bg-white border border-purple-200 rounded px-2 py-1"
+                              className="inline-flex items-center gap-2 bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-700 rounded px-2 py-1"
                             >
                               <div
                                 className="w-3 h-3 rounded-full"
                                 style={{ backgroundColor: COMPARISON_COLORS[(index + 1) % COMPARISON_COLORS.length] }}
                               />
-                              <span className="text-sm text-gray-900">{market.marketName}</span>
+                              <span className="text-sm text-gray-900 dark:text-gray-100">{market.marketName}</span>
                               <button
                                 onClick={() => handleRemoveFromComparison(market.marketId)}
-                                className="text-gray-400 hover:text-red-600 transition-colors"
+                                className="text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors"
                                 title="Remove from comparison"
                               >
                                 ×
@@ -740,7 +740,7 @@ function App() {
                       </div>
                       <button
                         onClick={handleClearComparison}
-                        className="text-xs text-purple-600 hover:text-purple-800 font-medium whitespace-nowrap"
+                        className="text-xs text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 font-medium whitespace-nowrap"
                       >
                         Clear All
                       </button>
@@ -767,10 +767,10 @@ function App() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-12">
+      <footer className="bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 mt-12">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-          <p className="text-center text-sm text-gray-500">
-            Market Pulse <span className="text-gray-400">| v0.6.0</span>
+          <p className="text-center text-sm text-gray-500 dark:text-gray-400">
+            Market Pulse <span className="text-gray-400 dark:text-gray-500">| v0.6.0</span>
           </p>
         </div>
       </footer>
@@ -778,18 +778,18 @@ function App() {
       {/* Login Modal */}
       {showLoginModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative animate-fadeIn">
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full p-6 relative animate-fadeIn">
             <button
               onClick={() => setShowLoginModal(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              className="absolute top-4 right-4 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Sign In</h2>
-              <p className="text-gray-600 mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Sign In</h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
                 Sign in to save your favorite markets and sync across devices
               </p>
               <button
@@ -801,7 +801,7 @@ function App() {
                     console.error('Login failed:', error);
                   }
                 }}
-                className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white border-2 border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all shadow-sm hover:shadow"
+                className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white dark:bg-slate-700 border-2 border-gray-300 dark:border-slate-600 rounded-lg font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-600 hover:border-gray-400 dark:hover:border-slate-500 transition-all shadow-sm hover:shadow"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path
@@ -823,7 +823,7 @@ function App() {
                 </svg>
                 Continue with Google
               </button>
-              <p className="text-xs text-gray-500 mt-4">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">
                 No account required - sign in with your Google account
               </p>
             </div>
