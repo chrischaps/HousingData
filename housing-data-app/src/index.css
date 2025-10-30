@@ -68,3 +68,9 @@ code {
 .stagger-animation > *:nth-child(7) { animation-delay: 0.35s; }
 .stagger-animation > *:nth-child(8) { animation-delay: 0.4s; }
 .stagger-animation > *:nth-child(9) { animation-delay: 0.45s; }
+
+/* Remove focus outline from chart SVG elements */
+.recharts-responsive-container svg,
+.recharts-responsive-container svg *:focus {
+  outline: none;
+}

@@ -204,7 +204,7 @@ export const PriceChart = ({
   const hasRentalOverlay = showRentalOverlay && filteredRentalData && filteredRentalData.length > 0;
 
   return (
-    <div className="w-full h-72 sm:h-80 md:h-96 bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 animate-fadeIn">
+    <div className="w-full h-72 sm:h-80 md:h-96 bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 animate-fadeIn outline-none" tabIndex={-1}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
           data={mergedData}
