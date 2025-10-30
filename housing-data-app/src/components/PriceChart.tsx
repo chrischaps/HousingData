@@ -208,7 +208,7 @@ export const PriceChart = ({
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
           data={mergedData}
-          margin={{ top: 5, right: hasRentalOverlay ? 50 : 10, left: 0, bottom: (hasComparisons || hasRentalOverlay) ? 25 : 5 }}
+          margin={{ top: 5, right: hasRentalOverlay ? 15 : 10, left: 0, bottom: (hasComparisons || hasRentalOverlay) ? 25 : 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
           <XAxis
