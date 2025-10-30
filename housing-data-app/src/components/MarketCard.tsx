@@ -21,13 +21,13 @@ export const MarketCard = ({ market, onClick, onToggleFavorite, isFavorited = fa
 
   return (
     <div
-      className="bg-white rounded-lg shadow p-4 cursor-pointer hover-lift hover:shadow-lg"
+      className="bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-slate-900/50 p-4 cursor-pointer hover-lift hover:shadow-lg dark:hover:shadow-slate-900"
       onClick={onClick}
     >
       <div className="flex justify-between items-start mb-3">
         <div className="flex-1">
-          <h3 className="font-semibold text-lg text-gray-900">{market.marketName}</h3>
-          <p className="text-sm text-gray-500">Single Family Home</p>
+          <h3 className="font-semibold text-lg text-gray-900 dark:text-white">{market.marketName}</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Single Family Home</p>
         </div>
         <div className="flex gap-2">
           {onAddToComparison && (
@@ -36,7 +36,7 @@ export const MarketCard = ({ market, onClick, onToggleFavorite, isFavorited = fa
                 e.stopPropagation();
                 onAddToComparison();
               }}
-              className="text-purple-600 hover:text-purple-900 hover:bg-purple-50 font-medium text-sm px-2 py-1 rounded transition-all hover:scale-105"
+              className="text-purple-600 dark:text-purple-400 hover:text-purple-900 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/30 font-medium text-sm px-2 py-1 rounded transition-all hover:scale-105"
               title="Add to comparison"
             >
               ⚖️
@@ -50,8 +50,8 @@ export const MarketCard = ({ market, onClick, onToggleFavorite, isFavorited = fa
               }}
               className={
                 isFavorited
-                  ? 'text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50 font-medium text-sm px-2 py-1 rounded transition-all hover:scale-105'
-                  : 'text-blue-600 hover:text-blue-900 hover:bg-blue-50 font-medium text-sm px-2 py-1 rounded transition-all hover:scale-105'
+                  ? 'text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-300 hover:bg-yellow-50 dark:hover:bg-yellow-900/30 font-medium text-sm px-2 py-1 rounded transition-all hover:scale-105'
+                  : 'text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 font-medium text-sm px-2 py-1 rounded transition-all hover:scale-105'
               }
               title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
             >
@@ -63,15 +63,15 @@ export const MarketCard = ({ market, onClick, onToggleFavorite, isFavorited = fa
 
       <div className="flex items-end gap-3">
         <div className="flex-1">
-          <p className="text-2xl font-bold text-gray-900 mb-1">
+          <p className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
             {formatPrice(market.currentPrice)}
           </p>
           {isPositive ? (
-            <p className="text-sm font-medium text-green-600">
+            <p className="text-sm font-medium text-green-600 dark:text-green-400">
               {arrow} {formatPercentage(market.priceChange)}
             </p>
           ) : (
-            <p className="text-sm font-medium text-red-600">
+            <p className="text-sm font-medium text-red-600 dark:text-red-400">
               {arrow} {formatPercentage(-Math.abs(market.priceChange))}
             </p>
           )}
