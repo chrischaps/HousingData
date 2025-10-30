@@ -380,6 +380,7 @@ function App() {
               markets={marketData}
               selectedMarketId={selectedMarket?.marketId}
               onSelectMarket={handleMarketClick}
+              onAddToComparison={handleAddToComparison}
               loading={dataLoading}
             />
           )}

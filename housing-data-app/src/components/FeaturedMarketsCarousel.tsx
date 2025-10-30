@@ -7,6 +7,7 @@ interface FeaturedMarketsCarouselProps {
   markets: MarketPriceData[];
   selectedMarketId?: string;
   onSelectMarket: (market: MarketPriceData) => void;
+  onAddToComparison?: (market: MarketPriceData) => void;
   loading?: boolean;
 }
 
@@ -18,6 +19,7 @@ export const FeaturedMarketsCarousel = ({
   markets,
   selectedMarketId,
   onSelectMarket,
+  onAddToComparison,
   loading = false,
 }: FeaturedMarketsCarouselProps) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -85,6 +87,7 @@ export const FeaturedMarketsCarousel = ({
                 market={market}
                 onClick={() => onSelectMarket(market)}
                 isSelected={market.marketId === selectedMarketId}
+                onAddToComparison={onAddToComparison}
               />
             </div>
           ))
