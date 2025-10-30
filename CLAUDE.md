@@ -32,9 +32,9 @@ Common Unix/Bash commands and their PowerShell equivalents:
 
 This is a housing market data visualization web application modeled after Google Finance, designed to display customizable graphs and analytics for various housing markets (single-family homes, apartments, rentals, etc.) across different cities and regions.
 
-**Current Status**: Production app with Firebase authentication, Firestore favorites, and market comparison
+**Current Status**: Production app with Firebase authentication, Firestore favorites, market comparison, and split CSV optimization
 - **POC (housing-data-poc)**: Complete proof of concept with CSV data loading, charts, Cloud Run deployment (v0.3.0)
-- **Production App (housing-data-app)**: Feature-complete MVP (v0.6.0) with real-time favorites and comparison - see SERVERLESS_TRANSITION_PLAN.md
+- **Production App (housing-data-app)**: Feature-complete MVP (v0.6.0) with real-time favorites, comparison, and on-demand data loading via split CSV from Cloud Storage (99.5% reduction in initial page load: 85.6 MB → ~420 KB)
 
 ## Repository Structure
 
@@ -66,9 +66,16 @@ HousingData/
 │   ├── package.json           # v0.6.0
 │   └── README.md              # Production app docs
 │
+├── scripts/                       # Build and deployment scripts
+│   ├── split-csv.ts              # Split 85MB CSV into 25k+ individual files
+│   ├── upload-to-cloud-storage.ts # Upload split files to GCS with CDN
+│   └── README.md                 # Complete workflow documentation
+│
 ├── SERVERLESS_TRANSITION_PLAN.md  # Firebase transition roadmap
 ├── PRODUCTION_TRANSITION_PLAN.md  # Traditional backend options
 ├── SECURITY_AUDIT_REPORT.md       # Comprehensive security audit ⭐
+├── DATA_OPTIMIZATION_GUIDE.md     # Data loading strategies (split CSV, API, database)
+├── SPLIT_CSV_README.md            # Split CSV implementation details
 └── CLAUDE.md                       # This file
 ```
 
@@ -611,6 +618,104 @@ Artifact Registry
     ↓
 Cloud Run (deployed)
 ```
+
+### Split CSV Optimization & Cloud Storage Setup
+
+The production app uses split CSV files stored in Google Cloud Storage for on-demand loading:
+
+**Overview:**
+- Split 85.6 MB ZHVI + 4 MB ZORI CSV files into 25,467 individual market files
+- Upload to GCS bucket with CDN caching and public access
+- Load markets on-demand (99.5% reduction: 85.6 MB → ~420 KB for 6 featured markets)
+
+**Scripts:**
+```powershell
+# Split CSV files (run from project root)
+npm run split-csv
+
+# Upload to Cloud Storage
+npm run upload-csv
+npm run upload-csv -- --dry-run  # Preview first
+npm run upload-csv -- --bucket=my-bucket --region=us-east1  # Custom options
+```
+
+**Initial Setup Requirements:**
+
+1. **Create and configure GCS bucket** (done via upload script):
+   ```powershell
+   # Bucket is created automatically with:
+   # - Public access enabled
+   # - CORS configured
+   # - Cache headers set (max-age=31536000)
+   ```
+
+2. **Create Secret Manager secrets** for deployment:
+   ```powershell
+   # CRITICAL: Use printf (not echo) to avoid trailing newlines/carriage returns
+   printf "true" | gcloud secrets create VITE_USE_SPLIT_CSV --data-file=-
+   printf "https://storage.googleapis.com/housing-data-markets" | gcloud secrets create VITE_MARKET_DATA_URL --data-file=-
+
+   # Grant Cloud Build service account access
+   gcloud secrets add-iam-policy-binding VITE_USE_SPLIT_CSV \
+     --member="serviceAccount:PROJECT_NUMBER-compute@developer.gserviceaccount.com" \
+     --role="roles/secretmanager.secretAccessor"
+
+   gcloud secrets add-iam-policy-binding VITE_MARKET_DATA_URL \
+     --member="serviceAccount:PROJECT_NUMBER-compute@developer.gserviceaccount.com" \
+     --role="roles/secretmanager.secretAccessor"
+   ```
+
+3. **Configure CORS on GCS bucket**:
+   ```powershell
+   # Create cors.json with:
+   # [{
+   #   "origin": ["*"],
+   #   "method": ["GET", "HEAD"],
+   #   "responseHeader": ["Content-Type", "Cache-Control"],
+   #   "maxAgeSeconds": 3600
+   # }]
+
+   gcloud storage buckets update gs://housing-data-markets --cors-file=cors.json
+   ```
+
+**Important Deployment Learnings:**
+
+1. **Secret Manager string values:**
+   - ⚠️ Use `printf` (NOT `echo`) when creating secrets to avoid trailing newlines
+   - `echo "true"` creates `"true\r\r"` which fails comparison `=== 'true'`
+   - `printf "true"` creates clean `"true"` string
+   - Verify with: `gcloud secrets versions access latest --secret=NAME | cat -A`
+
+2. **Environment variable propagation:**
+   - Vite embeds env vars at build time (not runtime)
+   - Changes to `.env` require dev server restart
+   - Changes to Secret Manager require new Cloud Build deployment
+   - Verify embedded values by checking build logs or console output
+
+3. **CORS configuration:**
+   - CORS must be set on GCS bucket, not individual objects
+   - Browser caches failed CORS responses - use hard refresh or incognito
+   - Verify CORS headers: `curl -I -H "Origin: https://your-app.com" https://storage.googleapis.com/bucket/file.csv`
+   - Look for `Access-Control-Allow-Origin: *` in response headers
+
+4. **IAM permissions:**
+   - Cloud Build service account needs `secretmanager.secretAccessor` role for each secret
+   - GCS bucket needs `allUsers` with `roles/storage.objectViewer` for public read
+   - Objects uploaded with `--predefined-acl=publicRead` are immediately accessible
+
+**Monthly Data Update Workflow:**
+
+See `scripts/README.md` for complete workflow. Quick version:
+1. Download new ZHVI/ZORI from Zillow
+2. Replace `housing-data-app/public/data/default-housing-data.csv` and `default-rental-data.csv`
+3. Run `npm run split-csv`
+4. Run `npm run upload-csv`
+5. Data is immediately available (no deployment needed due to CDN caching)
+
+**Cost Estimates:**
+- Storage: ~$0.03/month for 1.3GB (25k files)
+- Network egress: ~$0.30/month for 10k users
+- Total: **$0.30-0.35/month**
 
 ## Reference Documentation
 
