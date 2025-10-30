@@ -6,13 +6,14 @@ interface CompactMarketCardProps {
   market: MarketPriceData;
   onClick: () => void;
   isSelected?: boolean;
+  onAddToComparison?: (market: MarketPriceData) => void;
 }
 
 /**
  * Compact market card with mini sparkline chart for carousel display
  * Optimized for mobile horizontal scrolling (Google Finance style)
  */
-export const CompactMarketCard = ({ market, onClick, isSelected = false }: CompactMarketCardProps) => {
+export const CompactMarketCard = ({ market, onClick, isSelected = false, onAddToComparison }: CompactMarketCardProps) => {
   const isPositive = market.changeDirection === 'up';
   const arrow = isPositive ? '↑' : '↓';
   const changeColor = isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
@@ -32,7 +33,21 @@ export const CompactMarketCard = ({ market, onClick, isSelected = false }: Compa
         }
       `}
     >
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full relative">
+        {/* Comparison button - top right corner */}
+        {onAddToComparison && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddToComparison(market);
+            }}
+            className="absolute -top-1 -right-1 text-purple-600 dark:text-purple-400 hover:text-purple-900 dark:hover:text-purple-300 bg-white dark:bg-slate-700 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-full w-5 h-5 flex items-center justify-center text-xs border border-purple-200 dark:border-purple-600 transition-all hover:scale-110 z-10"
+            title="Add to comparison"
+          >
+            ⚖️
+          </button>
+        )}
+
         {/* Market name (truncated) */}
         <div className="text-xs font-medium text-gray-900 dark:text-white truncate mb-1">
           {market.marketName}
