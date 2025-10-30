@@ -79,16 +79,16 @@ export const CompactFavoriteCard = ({
   // Loading skeleton
   if (loading) {
     return (
-      <div className="flex-shrink-0 w-36 h-32 rounded-lg p-3 bg-white border border-gray-200 animate-pulse">
+      <div className="flex-shrink-0 w-36 h-32 rounded-lg p-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 animate-pulse">
         <div className="flex flex-col h-full">
-          <div className="h-3 w-20 bg-gray-200 rounded mb-2"></div>
-          <div className="h-4 w-16 bg-gray-200 rounded mb-2"></div>
-          <div className="h-3 w-12 bg-gray-200 rounded mb-2"></div>
+          <div className="h-3 w-20 bg-gray-200 dark:bg-slate-700 rounded mb-2"></div>
+          <div className="h-4 w-16 bg-gray-200 dark:bg-slate-700 rounded mb-2"></div>
+          <div className="h-3 w-12 bg-gray-200 dark:bg-slate-700 rounded mb-2"></div>
           <div className="flex-1 flex items-end gap-0.5">
             {[...Array(12)].map((_, i) => (
               <div
                 key={i}
-                className="flex-1 bg-gray-200 rounded-t"
+                className="flex-1 bg-gray-200 dark:bg-slate-700 rounded-t"
                 style={{ height: `${Math.random() * 60 + 40}%` }}
               ></div>
             ))}
@@ -106,14 +106,14 @@ export const CompactFavoriteCard = ({
         className={`
           flex-shrink-0 w-36 h-32 rounded-lg p-3 cursor-pointer transition-all
           ${isSelected
-            ? 'bg-blue-50 border-2 border-blue-500 shadow-md'
-            : 'bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md'
+            ? 'bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-500 dark:border-blue-400 shadow-md'
+            : 'bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600 hover:shadow-md'
           }
         `}
       >
         <div className="flex flex-col h-full justify-center items-center">
-          <div className="text-xs font-medium text-gray-500">{marketName}</div>
-          <div className="text-xs text-gray-400 mt-1">No data</div>
+          <div className="text-xs font-medium text-gray-500 dark:text-gray-400">{marketName}</div>
+          <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">No data</div>
         </div>
       </button>
     );
@@ -121,7 +121,7 @@ export const CompactFavoriteCard = ({
 
   const isPositive = marketData.changeDirection === 'up';
   const arrow = isPositive ? '↑' : '↓';
-  const changeColor = isPositive ? 'text-green-600' : 'text-red-600';
+  const changeColor = isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
   const lineColor = isPositive ? '#10B981' : '#EF4444';
   const chartData = marketData.historicalData.map(point => ({ value: point.price }));
 
@@ -131,8 +131,8 @@ export const CompactFavoriteCard = ({
       className={`
         flex-shrink-0 w-36 h-32 rounded-lg p-3 cursor-pointer transition-all
         ${isSelected
-          ? 'bg-blue-50 border-2 border-blue-500 shadow-md'
-          : 'bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md'
+          ? 'bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-500 dark:border-blue-400 shadow-md'
+          : 'bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600 hover:shadow-md'
         }
       `}
     >
@@ -144,7 +144,7 @@ export const CompactFavoriteCard = ({
               e.stopPropagation();
               onAddToComparison(marketData);
             }}
-            className="absolute -top-1 -right-1 text-purple-600 hover:text-purple-900 bg-white hover:bg-purple-50 rounded-full w-5 h-5 flex items-center justify-center text-xs border border-purple-200 transition-all hover:scale-110 z-10"
+            className="absolute -top-1 -right-1 text-purple-600 dark:text-purple-400 hover:text-purple-900 dark:hover:text-purple-300 bg-white dark:bg-slate-700 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-full w-5 h-5 flex items-center justify-center text-xs border border-purple-200 dark:border-purple-600 transition-all hover:scale-110 z-10"
             title="Add to comparison"
           >
             ⚖️
@@ -153,14 +153,14 @@ export const CompactFavoriteCard = ({
 
         {/* Market name (truncated) + Star indicator */}
         <div className="flex items-center justify-between mb-1">
-          <div className="text-xs font-medium text-gray-900 truncate flex-1">
+          <div className="text-xs font-medium text-gray-900 dark:text-white truncate flex-1">
             {marketName}
           </div>
-          <span className="text-yellow-600 text-sm ml-1 flex-shrink-0">★</span>
+          <span className="text-yellow-600 dark:text-yellow-400 text-sm ml-1 flex-shrink-0">★</span>
         </div>
 
         {/* Current price */}
-        <div className="text-base font-bold text-gray-900 mb-1">
+        <div className="text-base font-bold text-gray-900 dark:text-white mb-1">
           {formatPrice(marketData.currentPrice)}
         </div>
 

@@ -41,25 +41,25 @@ export const FeaturedMarketsCarousel = ({
     <div className="relative">
       {/* Section header */}
       <div className="flex items-center justify-between mb-3 px-4">
-        <h2 className="text-lg font-semibold text-gray-900">Featured Markets</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Featured Markets</h2>
 
         {/* Scroll buttons - hidden on mobile, shown on larger screens */}
         <div className="hidden sm:flex gap-2">
           <button
             onClick={() => scroll('left')}
-            className="p-1.5 rounded-full bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
+            className="p-1.5 rounded-full bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors"
             aria-label="Scroll left"
           >
-            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
           <button
             onClick={() => scroll('right')}
-            className="p-1.5 rounded-full bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
+            className="p-1.5 rounded-full bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors"
             aria-label="Scroll right"
           >
-            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
@@ -89,7 +89,7 @@ export const FeaturedMarketsCarousel = ({
             </div>
           ))
         ) : (
-          <div className="flex-1 flex items-center justify-center py-8 text-gray-500">
+          <div className="flex-1 flex items-center justify-center py-8 text-gray-500 dark:text-gray-400">
             No featured markets available
           </div>
         )}
