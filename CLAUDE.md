@@ -4,29 +4,50 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Environment
 
-**Shell Preference**: PowerShell
-- All command-line examples in this document use PowerShell syntax
-- Use backtick (`` ` ``) for line continuation, not backslash (`\`)
-- When suggesting new commands, use PowerShell-compatible syntax
+**Shell Environment**: The Bash tool runs `/usr/bin/bash` (Unix shell), NOT PowerShell
+- ⚠️ **IMPORTANT**: Do NOT use PowerShell-specific cmdlets like `Get-Content`, `Select-String`, `Select-Object`, `Out-File`, `Add-Content`
+- Use standard Unix commands: `cat`, `grep`, `head`, `tail`, `sed`, `awk`, `echo`, `printf`
+- **However**: For file operations, prefer specialized tools over Bash commands:
+  - Use `Read` tool instead of `cat`
+  - Use `Grep` tool instead of `grep` or `rg`
+  - Use `Write` tool instead of `echo >` or `cat <<EOF`
+  - Use `Edit` tool instead of `sed` or `awk`
+  - Use `Glob` tool instead of `find` or `ls`
 
-### PowerShell Command Equivalents
+**User's Local Environment**: PowerShell (Windows)
+- Command examples in this document use PowerShell syntax for the user's reference
+- User runs commands locally in PowerShell
+- Use backtick (`` ` ``) for line continuation in examples, not backslash (`\`)
 
-Common Unix/Bash commands and their PowerShell equivalents:
+### Common Command Reference
 
-| Unix/Bash | PowerShell | Description |
-|-----------|------------|-------------|
-| `ls` | `Get-ChildItem` or `ls` | List directory contents |
-| `cat file.txt` | `Get-Content file.txt` or `cat file.txt` | Display file contents |
-| `grep pattern file` | `Select-String -Pattern "pattern" -Path file` | Search for pattern in file |
-| `find . -name "*.js"` | `Get-ChildItem -Recurse -Filter "*.js"` | Find files recursively |
-| `echo "text" >> file` | `"text" \| Add-Content file` | Append to file |
-| `echo "text" > file` | `"text" \| Out-File file` | Write to file (overwrite) |
-| `rm file` | `Remove-Item file` or `rm file` | Remove file |
-| `mkdir dir` | `New-Item -ItemType Directory dir` or `mkdir dir` | Create directory |
-| `touch file` | `New-Item file` | Create empty file |
-| `pwd` | `Get-Location` or `pwd` | Print working directory |
+When the user asks for commands to run locally (PowerShell):
 
-**Note:** Many Unix aliases work in PowerShell (`ls`, `cat`, `rm`, `pwd`, etc.) but use PowerShell cmdlets for scripts.
+| Task | PowerShell Command | Description |
+|------|-------------------|-------------|
+| List files | `Get-ChildItem` or `ls` | List directory contents |
+| Read file | `Get-Content file.txt` or `cat file.txt` | Display file contents |
+| Search in file | `Select-String -Pattern "pattern" -Path file` | Search for pattern |
+| Find files | `Get-ChildItem -Recurse -Filter "*.js"` | Find files recursively |
+| Append to file | `"text" \| Add-Content file` | Append text to file |
+| Write file | `"text" \| Out-File file` | Write to file (overwrite) |
+| Delete file | `Remove-Item file` or `rm file` | Remove file |
+| Create directory | `New-Item -ItemType Directory dir` or `mkdir dir` | Create directory |
+| Create file | `New-Item file` | Create empty file |
+| Current directory | `Get-Location` or `pwd` | Print working directory |
+
+When using the Bash tool for command execution:
+
+| Task | Bash Command | Notes |
+|------|--------------|-------|
+| List files | `ls -la` | Standard Unix ls |
+| Read file | Use `Read` tool | Prefer tool over `cat` |
+| Search in file | Use `Grep` tool | Prefer tool over `grep` |
+| Find files | Use `Glob` tool | Prefer tool over `find` |
+| Test curl/HTTP | `curl -I URL` | For testing endpoints |
+| Git operations | `git status`, `git add`, etc. | Standard git commands |
+| gcloud operations | `gcloud storage ls`, etc. | Standard gcloud commands |
+| Package managers | `npm install`, `pip install`, etc. | Standard package managers |
 
 ## Project Overview
 
