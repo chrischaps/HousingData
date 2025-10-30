@@ -19,10 +19,17 @@ import type { FavoriteMarket } from '../types';
 const FAVORITES_COLLECTION = 'favorites';
 
 export const useFavorites = () => {
-  const [user] = useAuthState(auth);
+  const [user, authLoading] = useAuthState(auth);
   const [favorites, setFavorites] = useState<FavoriteMarket[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [favoritesInitialized, setFavoritesInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Combined loading state:
+  // - true if auth is loading
+  // - true if user exists AND favorites haven't been fetched yet
+  // Key: We only care about favoritesInitialized when there IS a user
+  const loading = authLoading || (!!user && !favoritesInitialized);
+
 
   /**
    * Set up real-time listener for favorites
@@ -30,7 +37,7 @@ export const useFavorites = () => {
   useEffect(() => {
     if (!user) {
       setFavorites([]);
-      setLoading(false);
+      // Don't set favoritesInitialized to true - keep it false so loading state works correctly
       return;
     }
 
@@ -40,7 +47,8 @@ export const useFavorites = () => {
       { userId: user.uid }
     );
 
-    setLoading(true);
+    // Mark as not initialized until first callback
+    setFavoritesInitialized(false);
     setError(null);
 
     // Create query for user's favorites
@@ -79,7 +87,7 @@ export const useFavorites = () => {
         );
 
         setFavorites(userFavorites);
-        setLoading(false);
+        setFavoritesInitialized(true);
       },
       (err) => {
         console.error(
@@ -88,7 +96,7 @@ export const useFavorites = () => {
           err
         );
         setError('Failed to load favorites');
-        setLoading(false);
+        setFavoritesInitialized(true);
       }
     );
 
