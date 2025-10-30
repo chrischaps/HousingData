@@ -81,12 +81,18 @@ function App() {
   const { data: marketData, loading: dataLoading, error, loadingProgress, loadingMessage } = useMarketData();
 
   // Favorites hook
-  const { favorites, toggleFavorite, isFavorited } = useFavorites();
+  const { favorites, loading: favoritesLoading, toggleFavorite, isFavorited } = useFavorites();
 
   // Pre-selection logic: Select first favorite (if logged in with favorites) or first featured market
   useEffect(() => {
-    // Only run when data is loaded and no market is selected yet
+    // Only run when data is loaded, favorites are loaded (if user is logged in), and no market is selected yet
     if (dataLoading || selectedMarket) return;
+
+    // If user is logged in, wait for favorites to load before selecting
+    if (user && favoritesLoading) {
+      console.log('[App] Waiting for favorites to load before pre-selecting market...');
+      return;
+    }
 
     const selectInitialMarket = async () => {
       // If user is logged in and has favorites, select first favorite
@@ -143,7 +149,7 @@ function App() {
 
     selectInitialMarket();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, favorites.length, marketData.length, dataLoading]);
+  }, [user, favorites.length, marketData.length, dataLoading, favoritesLoading]);
 
   // Show loading state while checking auth (but allow app to load)
   // We'll show auth loading in the header instead of blocking the whole app
