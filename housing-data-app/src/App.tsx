@@ -575,17 +575,25 @@ function App() {
       <main className="max-w-7xl mx-auto px-4 py-4 sm:py-6 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
           {/* Sidebar */}
-          <aside className="lg:col-span-1 space-y-4 sm:space-y-6">
-            <MarketSearch
-              onSelectMarket={handleSelectMarket}
-              onAddToComparison={handleAddToComparisonFromSearch}
-            />
-            {user && <FavoritesPanel onSelectMarket={handleSelectFavorite} onAddToComparison={handleAddToComparison} />}
-            <SettingsPanel onDataChange={() => window.location.reload()} />
+          <aside className="lg:col-span-1 space-y-4 sm:space-y-6 contents lg:block">
+            <div className="order-1">
+              <MarketSearch
+                onSelectMarket={handleSelectMarket}
+                onAddToComparison={handleAddToComparisonFromSearch}
+              />
+            </div>
+            {user && (
+              <div className="order-2">
+                <FavoritesPanel onSelectMarket={handleSelectFavorite} onAddToComparison={handleAddToComparison} />
+              </div>
+            )}
+            <div className="order-4 lg:order-3">
+              <SettingsPanel onDataChange={() => window.location.reload()} />
+            </div>
           </aside>
 
           {/* Main Content Area */}
-          <div className="lg:col-span-3 space-y-4 sm:space-y-6">
+          <div className="lg:col-span-3 space-y-4 sm:space-y-6 order-3 lg:order-4">
             {/* CSV Loading Progress (Desktop) */}
             {dataLoading && loadingProgress > 0 && loadingProgress < 100 && (
               <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 animate-slideIn">
