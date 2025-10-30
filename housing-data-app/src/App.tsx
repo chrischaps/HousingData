@@ -81,12 +81,41 @@ function App() {
   const { data: marketData, loading: dataLoading, error, loadingProgress, loadingMessage } = useMarketData();
 
   // Favorites hook
-  const { favorites, toggleFavorite, isFavorited } = useFavorites();
+  const { favorites, loading: favoritesLoading, toggleFavorite, isFavorited } = useFavorites();
+
+  // Debug: Log state changes to diagnose pre-selection issue
+  useEffect(() => {
+    console.log('[App] State changed:', {
+      user: user?.email || 'not logged in',
+      dataLoading,
+      favoritesLoading,
+      selectedMarket: selectedMarket?.marketName || 'none',
+      favoritesCount: favorites.length,
+      marketDataCount: marketData.length
+    });
+  }, [user, dataLoading, favoritesLoading, selectedMarket, favorites.length, marketData.length]);
 
   // Pre-selection logic: Select first favorite (if logged in with favorites) or first featured market
   useEffect(() => {
+    console.log('[App] Pre-selection effect running. Conditions:', {
+      dataLoading,
+      selectedMarket: selectedMarket?.marketName || 'none',
+      user: user?.email || 'not logged in',
+      favoritesLoading,
+      favoritesCount: favorites.length
+    });
+
     // Only run when data is loaded and no market is selected yet
-    if (dataLoading || selectedMarket) return;
+    if (dataLoading || selectedMarket) {
+      console.log('[App] Early return - dataLoading or market already selected');
+      return;
+    }
+
+    // If user is logged in, wait for favorites to load
+    if (user && favoritesLoading) {
+      console.log('[App] Waiting for favorites to load before pre-selecting market...');
+      return;
+    }
 
     const selectInitialMarket = async () => {
       // If user is logged in and has favorites, select first favorite
@@ -143,7 +172,7 @@ function App() {
 
     selectInitialMarket();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, favorites.length, marketData.length, dataLoading]);
+  }, [user, favorites.length, marketData.length, dataLoading, favoritesLoading]);
 
   // Show loading state while checking auth (but allow app to load)
   // We'll show auth loading in the header instead of blocking the whole app
