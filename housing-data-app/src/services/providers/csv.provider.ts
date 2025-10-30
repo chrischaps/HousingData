@@ -631,6 +631,13 @@ export class CSVProvider extends BaseProvider {
       }
 
       const currentPrice = historicalPrices[historicalPrices.length - 1].price;
+      const previousPrice = historicalPrices.length >= 2 ? historicalPrices[historicalPrices.length - 2].price : currentPrice;
+
+      // Calculate percent change from previous data point
+      let percentChange = 0;
+      if (previousPrice > 0) {
+        percentChange = ((currentPrice - previousPrice) / previousPrice) * 100;
+      }
 
       const marketStats: MarketStats = {
         id: regionId,
@@ -642,6 +649,7 @@ export class CSVProvider extends BaseProvider {
           maxPrice: Math.max(...historicalPrices.map(h => h.price)),
           lastUpdatedDate: new Date().toISOString()
         },
+        percentChange,
         historicalPrices
       };
 
@@ -665,9 +673,19 @@ export class CSVProvider extends BaseProvider {
           }
 
           if (historicalRentals.length > 0) {
+            const currentRent = historicalRentals[historicalRentals.length - 1].rent;
+            const previousRent = historicalRentals.length >= 2 ? historicalRentals[historicalRentals.length - 2].rent : currentRent;
+
+            // Calculate rent change from previous data point
+            let rentChange = 0;
+            if (previousRent > 0) {
+              rentChange = ((currentRent - previousRent) / previousRent) * 100;
+            }
+
             marketStats.rentalData = {
-              medianRent: historicalRentals[historicalRentals.length - 1].rent
+              medianRent: currentRent
             };
+            marketStats.rentChange = rentChange;
             marketStats.historicalRentals = historicalRentals;
           }
         }
