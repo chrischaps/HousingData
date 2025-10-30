@@ -21,11 +21,23 @@ const FAVORITES_COLLECTION = 'favorites';
 export const useFavorites = () => {
   const [user, authLoading] = useAuthState(auth);
   const [favorites, setFavorites] = useState<FavoriteMarket[]>([]);
-  const [favoritesLoading, setFavoritesLoading] = useState(false);
+  const [favoritesInitialized, setFavoritesInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Combined loading state: true if auth is loading OR favorites are loading
-  const loading = authLoading || favoritesLoading;
+  // Combined loading state:
+  // - true if auth is loading
+  // - true if user exists AND favorites haven't been fetched yet
+  // Key: We only care about favoritesInitialized when there IS a user
+  const loading = authLoading || (!!user && !favoritesInitialized);
+
+  // Debug logging
+  console.log('[useFavorites] Loading state:', {
+    authLoading,
+    favoritesInitialized,
+    hasUser: !!user,
+    favoritesCount: favorites.length,
+    combinedLoading: loading
+  });
 
   /**
    * Set up real-time listener for favorites
@@ -33,7 +45,7 @@ export const useFavorites = () => {
   useEffect(() => {
     if (!user) {
       setFavorites([]);
-      setFavoritesLoading(false);
+      // Don't set favoritesInitialized to true - keep it false so loading state works correctly
       return;
     }
 
@@ -43,7 +55,8 @@ export const useFavorites = () => {
       { userId: user.uid }
     );
 
-    setFavoritesLoading(true);
+    // Mark as not initialized until first callback
+    setFavoritesInitialized(false);
     setError(null);
 
     // Create query for user's favorites
@@ -82,7 +95,7 @@ export const useFavorites = () => {
         );
 
         setFavorites(userFavorites);
-        setFavoritesLoading(false);
+        setFavoritesInitialized(true);
       },
       (err) => {
         console.error(
@@ -91,7 +104,7 @@ export const useFavorites = () => {
           err
         );
         setError('Failed to load favorites');
-        setFavoritesLoading(false);
+        setFavoritesInitialized(true);
       }
     );
 
