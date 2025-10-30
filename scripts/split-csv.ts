@@ -15,6 +15,14 @@ interface SplitStats {
   errors: string[];
 }
 
+interface MarketIndexEntry {
+  id: string;
+  name: string;
+  city: string;
+  state: string;
+  marketKey: string;
+}
+
 /**
  * Normalize market name to create safe filename
  */
@@ -33,7 +41,7 @@ const splitZillowCSV = async (
   inputPath: string,
   outputDir: string,
   type: 'zhvi' | 'zori'
-): Promise<SplitStats> => {
+): Promise<{ stats: SplitStats; markets: MarketIndexEntry[] }> => {
   console.log(`\n📊 Splitting ${type.toUpperCase()} file: ${inputPath}`);
 
   const stats: SplitStats = {
@@ -41,6 +49,8 @@ const splitZillowCSV = async (
     filesCreated: 0,
     errors: []
   };
+
+  const markets: MarketIndexEntry[] = [];
 
   try {
     // Read and parse CSV
@@ -78,6 +88,15 @@ const splitZillowCSV = async (
         // Write file
         fs.writeFileSync(filePath, csvContent, 'utf-8');
 
+        // Add to markets index
+        markets.push({
+          id: row.RegionID,
+          name: `${row.RegionName}, ${row.State}`,
+          city: row.RegionName,
+          state: row.State,
+          marketKey: marketKey
+        });
+
         stats.marketsProcessed++;
         stats.filesCreated++;
       } catch (error) {
@@ -92,7 +111,7 @@ const splitZillowCSV = async (
     throw error;
   }
 
-  return stats;
+  return { stats, markets };
 };
 
 /**
@@ -111,26 +130,32 @@ const runSplitter = async () => {
 
   try {
     // Split ZHVI
-    const zhviStats = await splitZillowCSV(
+    const zhviResult = await splitZillowCSV(
       path.join(__dirname, '../housing-data-app/public/data/default-housing-data.csv'),
       path.join(__dirname, '../housing-data-app/public/data/markets'),
       'zhvi'
     );
 
-    totalStats.marketsProcessed += zhviStats.marketsProcessed;
-    totalStats.filesCreated += zhviStats.filesCreated;
-    totalStats.errors.push(...zhviStats.errors);
+    totalStats.marketsProcessed += zhviResult.stats.marketsProcessed;
+    totalStats.filesCreated += zhviResult.stats.filesCreated;
+    totalStats.errors.push(...zhviResult.stats.errors);
 
     // Split ZORI
-    const zoriStats = await splitZillowCSV(
+    const zoriResult = await splitZillowCSV(
       path.join(__dirname, '../housing-data-app/public/data/default-rental-data.csv'),
       path.join(__dirname, '../housing-data-app/public/data/markets'),
       'zori'
     );
 
-    totalStats.marketsProcessed += zoriStats.marketsProcessed;
-    totalStats.filesCreated += zoriStats.filesCreated;
-    totalStats.errors.push(...zoriStats.errors);
+    totalStats.marketsProcessed += zoriResult.stats.marketsProcessed;
+    totalStats.filesCreated += zoriResult.stats.filesCreated;
+    totalStats.errors.push(...zoriResult.stats.errors);
+
+    // Create markets index (use ZHVI markets as the primary list)
+    console.log('\n📋 Creating markets index...');
+    const indexPath = path.join(__dirname, '../housing-data-app/public/data/markets/markets-index.json');
+    fs.writeFileSync(indexPath, JSON.stringify(zhviResult.markets, null, 2), 'utf-8');
+    console.log(`   ✅ Created index with ${zhviResult.markets.length} markets`);
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
 
