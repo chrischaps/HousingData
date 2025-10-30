@@ -22,8 +22,8 @@ export const MarketSearch = ({ onSelectMarket, onAddToComparison }: MarketSearch
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-4">
-      <h2 className="text-xl font-bold mb-4 text-gray-900">Search Markets</h2>
+    <div className="bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-slate-900/50 p-4">
+      <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Search Markets</h2>
 
       <div className="relative">
         <input
@@ -31,28 +31,28 @@ export const MarketSearch = ({ onSelectMarket, onAddToComparison }: MarketSearch
           value={query}
           onChange={(e) => handleInputChange(e.target.value)}
           placeholder="Search by city or ZIP code..."
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
         />
 
         {/* Loading indicator */}
         {loading && (
-          <div className="absolute top-12 left-0 right-0 bg-white border border-gray-300 rounded-lg shadow-lg p-3">
-            <p className="text-sm text-gray-500">Searching...</p>
+          <div className="absolute top-12 left-0 right-0 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-lg shadow-lg p-3">
+            <p className="text-sm text-gray-500 dark:text-gray-400">Searching...</p>
           </div>
         )}
 
         {/* Error message */}
         {error && !loading && (
-          <div className="absolute top-12 left-0 right-0 bg-yellow-50 border border-yellow-200 rounded-lg shadow-lg p-3">
-            <p className="text-sm text-yellow-800">{error}</p>
+          <div className="absolute top-12 left-0 right-0 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg shadow-lg p-3">
+            <p className="text-sm text-yellow-800 dark:text-yellow-200">{error}</p>
           </div>
         )}
 
         {/* Search results */}
         {results.length > 0 && !loading && (
-          <div className="absolute top-12 left-0 right-0 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-y-auto z-10">
+          <div className="absolute top-12 left-0 right-0 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-lg shadow-lg max-h-64 overflow-y-auto z-10">
             {totalCount > results.length && (
-              <div className="sticky top-0 bg-blue-50 border-b border-blue-200 px-3 py-2 text-xs text-blue-800">
+              <div className="sticky top-0 bg-blue-50 dark:bg-blue-900/30 border-b border-blue-200 dark:border-blue-800 px-3 py-2 text-xs text-blue-800 dark:text-blue-200">
                 Showing {results.length} of {totalCount} results
               </div>
             )}
@@ -60,11 +60,11 @@ export const MarketSearch = ({ onSelectMarket, onAddToComparison }: MarketSearch
               <div
                 key={market.id}
                 onClick={() => handleSelectMarket(market)}
-                className="p-3 hover:bg-gray-100 cursor-pointer border-b last:border-b-0 flex items-start justify-between gap-2"
+                className="p-3 hover:bg-gray-100 dark:hover:bg-slate-700 cursor-pointer border-b dark:border-slate-700 last:border-b-0 flex items-start justify-between gap-2"
               >
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900">{market.name}</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="font-medium text-gray-900 dark:text-white">{market.name}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     {market.city}, {market.state}
                     {market.zipCode && ` • ${market.zipCode}`}
                   </p>
@@ -75,7 +75,7 @@ export const MarketSearch = ({ onSelectMarket, onAddToComparison }: MarketSearch
                       e.stopPropagation();
                       onAddToComparison(market);
                     }}
-                    className="text-purple-600 hover:text-purple-900 hover:bg-purple-50 font-medium text-sm px-2 py-1 rounded transition-all hover:scale-105 flex-shrink-0"
+                    className="text-purple-600 dark:text-purple-400 hover:text-purple-900 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/30 font-medium text-sm px-2 py-1 rounded transition-all hover:scale-105 flex-shrink-0"
                     title="Add to comparison"
                   >
                     ⚖️
@@ -88,13 +88,13 @@ export const MarketSearch = ({ onSelectMarket, onAddToComparison }: MarketSearch
 
         {/* No results message */}
         {query.length >= 2 && results.length === 0 && !loading && !error && (
-          <div className="absolute top-12 left-0 right-0 bg-white border border-gray-300 rounded-lg shadow-lg p-3">
-            <p className="text-sm text-gray-500">No markets found</p>
+          <div className="absolute top-12 left-0 right-0 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-lg shadow-lg p-3">
+            <p className="text-sm text-gray-500 dark:text-gray-400">No markets found</p>
           </div>
         )}
       </div>
 
-      <p className="text-xs text-gray-500 mt-2">
+      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
         Try searching for cities like "Detroit" or ZIP codes like "48201"
       </p>
     </div>

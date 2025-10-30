@@ -82,9 +82,9 @@ export const FavoriteCard = ({
 
   if (loading) {
     return (
-      <div className="p-3 rounded-lg border border-gray-200 animate-pulse">
-        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+      <div className="p-3 rounded-lg border border-gray-200 dark:border-slate-700 animate-pulse">
+        <div className="h-4 bg-gray-200 dark:bg-slate-700 rounded w-3/4 mb-2"></div>
+        <div className="h-3 bg-gray-200 dark:bg-slate-700 rounded w-1/2"></div>
       </div>
     );
   }
@@ -93,15 +93,15 @@ export const FavoriteCard = ({
     return (
       <div
         onClick={onClick}
-        className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 cursor-pointer border border-gray-200 transition-colors group"
+        className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 cursor-pointer border border-gray-200 dark:border-slate-700 transition-colors group"
       >
         <div className="flex-1 min-w-0">
-          <p className="font-medium text-gray-900 truncate">{marketName}</p>
-          <p className="text-xs text-gray-500">Data unavailable</p>
+          <p className="font-medium text-gray-900 dark:text-white truncate">{marketName}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Data unavailable</p>
         </div>
         <button
           onClick={onRemove}
-          className="ml-2 text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition-colors opacity-0 group-hover:opacity-100"
+          className="ml-2 text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30 px-2 py-1 rounded transition-colors opacity-0 group-hover:opacity-100"
           title="Remove from favorites"
         >
           ✕
@@ -118,12 +118,12 @@ export const FavoriteCard = ({
   return (
     <div
       onClick={onClick}
-      className="p-3 rounded-lg hover:bg-gray-50 cursor-pointer border border-gray-200 transition-colors group"
+      className="p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 cursor-pointer border border-gray-200 dark:border-slate-700 transition-colors group"
     >
       <div className="flex items-start justify-between mb-2">
         <div className="flex-1 min-w-0">
-          <p className="font-medium text-gray-900 truncate text-sm">{marketName}</p>
-          <p className="text-xs text-gray-500">
+          <p className="font-medium text-gray-900 dark:text-white truncate text-sm">{marketName}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             Added {new Date(addedAt).toLocaleDateString()}
           </p>
         </div>
@@ -134,7 +134,7 @@ export const FavoriteCard = ({
                 e.stopPropagation();
                 onAddToComparison(marketData);
               }}
-              className="text-purple-600 hover:text-purple-900 hover:bg-purple-50 px-2 py-1 rounded transition-colors"
+              className="text-purple-600 dark:text-purple-400 hover:text-purple-900 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/30 px-2 py-1 rounded transition-colors"
               title="Add to comparison"
             >
               ⚖️
@@ -142,7 +142,7 @@ export const FavoriteCard = ({
           )}
           <button
             onClick={onRemove}
-            className="text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition-colors"
+            className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30 px-2 py-1 rounded transition-colors"
             title="Remove from favorites"
           >
             ✕
@@ -152,10 +152,10 @@ export const FavoriteCard = ({
 
       <div className="flex items-end justify-between gap-2">
         <div>
-          <p className="text-lg font-bold text-gray-900">
+          <p className="text-lg font-bold text-gray-900 dark:text-white">
             {formatPrice(marketData.currentPrice)}
           </p>
-          <p className={`text-xs font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+          <p className={`text-xs font-medium ${isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
             {arrow} {formatPercentage(isPositive ? marketData.priceChange : -Math.abs(marketData.priceChange))}
           </p>
         </div>
