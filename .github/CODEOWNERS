@@ -1,0 +1,28 @@
+# CODEOWNERS file for HousingData repository
+# These owners will be automatically requested for review when someone opens a pull request
+# Co-authored by Claude Code (Anthropic)
+
+# Default owners for everything in the repo
+* @chrischaps
+
+# Production app
+/housing-data-app/ @chrischaps
+
+# POC app
+/housing-data-poc/ @chrischaps
+
+# Scripts and tooling
+/scripts/ @chrischaps
+
+# Documentation
+*.md @chrischaps
+
+# Configuration files
+*.json @chrischaps
+*.yaml @chrischaps
+*.yml @chrischaps
+
+# Security and deployment
+/housing-data-app/firestore.rules @chrischaps
+/housing-data-app/cloudbuild.yaml @chrischaps
+/housing-data-app/Dockerfile @chrischaps
