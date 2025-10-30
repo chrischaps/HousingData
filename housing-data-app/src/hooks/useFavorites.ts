@@ -30,14 +30,6 @@ export const useFavorites = () => {
   // Key: We only care about favoritesInitialized when there IS a user
   const loading = authLoading || (!!user && !favoritesInitialized);
 
-  // Debug logging
-  console.log('[useFavorites] Loading state:', {
-    authLoading,
-    favoritesInitialized,
-    hasUser: !!user,
-    favoritesCount: favorites.length,
-    combinedLoading: loading
-  });
 
   /**
    * Set up real-time listener for favorites

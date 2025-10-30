@@ -83,54 +83,19 @@ function App() {
   // Favorites hook
   const { favorites, loading: favoritesLoading, toggleFavorite, isFavorited } = useFavorites();
 
-  // Debug: Log state changes to diagnose pre-selection issue
-  useEffect(() => {
-    console.log('[App] State changed:', {
-      user: user?.email || 'not logged in',
-      authLoading,
-      dataLoading,
-      favoritesLoading,
-      selectedMarket: selectedMarket?.marketName || 'none',
-      favoritesCount: favorites.length,
-      marketDataCount: marketData.length
-    });
-  }, [user, authLoading, dataLoading, favoritesLoading, selectedMarket, favorites.length, marketData.length]);
-
   // Pre-selection logic: Select first favorite (if logged in with favorites) or first featured market
   useEffect(() => {
-    console.log('[App] Pre-selection effect running. Conditions:', {
-      dataLoading,
-      authLoading,
-      favoritesLoading,
-      selectedMarket: selectedMarket?.marketName || 'none',
-      user: user?.email || 'not logged in',
-      favoritesCount: favorites.length
-    });
 
     // Only run when data is loaded, auth is loaded, favorites are loaded, and no market is selected yet
-    if (dataLoading || selectedMarket) {
-      console.log('[App] Early return - dataLoading or market already selected');
-      return;
-    }
+    if (dataLoading || selectedMarket) return;
 
     // Wait for auth to initialize before making any selection decisions
-    if (authLoading) {
-      console.log('[App] Waiting for auth to initialize before pre-selecting market...');
-      return;
-    }
+    if (authLoading) return;
 
     // If user is logged in, wait for favorites to load before selecting
-    if (user && favoritesLoading) {
-      console.log('[App] Waiting for favorites to load before pre-selecting market...');
-      return;
-    }
+    if (user && favoritesLoading) return;
 
     const selectInitialMarket = async () => {
-      console.log('[App] selectInitialMarket() executing:', {
-        hasUser: !!user,
-        favoritesCount: favorites.length,
-        marketDataCount: marketData.length
-      });
 
       // If user is logged in and has favorites, select first favorite
       if (user && favorites.length > 0) {
@@ -180,7 +145,6 @@ function App() {
 
       // Otherwise, select first featured market
       if (marketData.length > 0) {
-        console.log('[App] No user or no favorites - selecting first featured market:', marketData[0].marketName);
         setSelectedMarket(marketData[0]);
       }
     };
