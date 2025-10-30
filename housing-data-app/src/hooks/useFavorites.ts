@@ -19,10 +19,13 @@ import type { FavoriteMarket } from '../types';
 const FAVORITES_COLLECTION = 'favorites';
 
 export const useFavorites = () => {
-  const [user] = useAuthState(auth);
+  const [user, authLoading] = useAuthState(auth);
   const [favorites, setFavorites] = useState<FavoriteMarket[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [favoritesLoading, setFavoritesLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Combined loading state: true if auth is loading OR favorites are loading
+  const loading = authLoading || favoritesLoading;
 
   /**
    * Set up real-time listener for favorites
@@ -30,7 +33,7 @@ export const useFavorites = () => {
   useEffect(() => {
     if (!user) {
       setFavorites([]);
-      setLoading(false);
+      setFavoritesLoading(false);
       return;
     }
 
@@ -40,7 +43,7 @@ export const useFavorites = () => {
       { userId: user.uid }
     );
 
-    setLoading(true);
+    setFavoritesLoading(true);
     setError(null);
 
     // Create query for user's favorites
@@ -79,7 +82,7 @@ export const useFavorites = () => {
         );
 
         setFavorites(userFavorites);
-        setLoading(false);
+        setFavoritesLoading(false);
       },
       (err) => {
         console.error(
@@ -88,7 +91,7 @@ export const useFavorites = () => {
           err
         );
         setError('Failed to load favorites');
-        setLoading(false);
+        setFavoritesLoading(false);
       }
     );
 

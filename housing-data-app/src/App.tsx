@@ -83,10 +83,35 @@ function App() {
   // Favorites hook
   const { favorites, loading: favoritesLoading, toggleFavorite, isFavorited } = useFavorites();
 
+  // Debug: Log state changes to diagnose pre-selection issue
+  useEffect(() => {
+    console.log('[App] State changed:', {
+      user: user?.email || 'not logged in',
+      authLoading,
+      dataLoading,
+      favoritesLoading,
+      selectedMarket: selectedMarket?.marketName || 'none',
+      favoritesCount: favorites.length,
+      marketDataCount: marketData.length
+    });
+  }, [user, authLoading, dataLoading, favoritesLoading, selectedMarket, favorites.length, marketData.length]);
+
   // Pre-selection logic: Select first favorite (if logged in with favorites) or first featured market
   useEffect(() => {
+    console.log('[App] Pre-selection effect running. Conditions:', {
+      dataLoading,
+      authLoading,
+      favoritesLoading,
+      selectedMarket: selectedMarket?.marketName || 'none',
+      user: user?.email || 'not logged in',
+      favoritesCount: favorites.length
+    });
+
     // Only run when data is loaded, favorites are loaded (if user is logged in), and no market is selected yet
-    if (dataLoading || selectedMarket) return;
+    if (dataLoading || selectedMarket) {
+      console.log('[App] Early return - dataLoading or market already selected');
+      return;
+    }
 
     // If user is logged in, wait for favorites to load before selecting
     if (user && favoritesLoading) {
