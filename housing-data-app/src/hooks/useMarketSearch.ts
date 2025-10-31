@@ -37,41 +37,41 @@ export const useMarketSearch = (): UseMarketSearchResult => {
 
     console.log('[useMarketSearch] Searching with provider:', providerType);
 
-    // If using CSV provider, search through all markets
+    // If using CSV provider, search through markets index
     if (providerType === 'csv' && provider instanceof CSVProvider) {
       await provider.waitForDataLoad();
-      const allMarkets = provider.getAllMarkets();
 
-      console.log('[useMarketSearch] CSV markets available:', allMarkets.length);
+      // Load markets index
+      const indexUrl = import.meta.env.VITE_USE_SPLIT_CSV === 'true'
+        ? `${import.meta.env.VITE_MARKET_DATA_URL || '/data/markets'}/markets-index.json`
+        : '/data/markets/markets-index.json';
+
+      console.log('[useMarketSearch] Loading markets index from:', indexUrl);
+
+      const response = await fetch(indexUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to load markets index: ${response.statusText}`);
+      }
+
+      const marketsIndex: Market[] = await response.json();
+      console.log('[useMarketSearch] CSV markets available:', marketsIndex.length);
 
       const lowerQuery = query.toLowerCase();
 
-      // Search through all CSV markets (get all matches first)
-      const allMatches = allMarkets
-        .filter(stats => {
-          // Skip markets without city or state
-          if (!stats.city || !stats.state) return false;
+      // Search through all markets
+      const allMatches = marketsIndex.filter(market => {
+        const cityMatch = market.city.toLowerCase().includes(lowerQuery);
+        const stateMatch = market.state.toLowerCase().includes(lowerQuery);
+        const zipMatch = market.zipCode?.includes(query);
+        const fullNameMatch = market.name.toLowerCase().includes(lowerQuery);
 
-          const cityMatch = stats.city.toLowerCase().includes(lowerQuery);
-          const stateMatch = stats.state.toLowerCase().includes(lowerQuery);
-          const zipMatch = stats.zipCode?.includes(query);
-          const fullNameMatch = `${stats.city}, ${stats.state}`.toLowerCase().includes(lowerQuery);
-
-          return cityMatch || stateMatch || zipMatch || fullNameMatch;
-        });
+        return cityMatch || stateMatch || zipMatch || fullNameMatch;
+      });
 
       const totalMatches = allMatches.length;
 
-      // Limit displayed results to 100 (but search all)
-      const limitedResults = allMatches
-        .slice(0, 100)
-        .map(stats => ({
-          id: stats.id || `${stats.city}-${stats.state}`,
-          name: `${stats.city}, ${stats.state}`,
-          city: stats.city!,
-          state: stats.state!,
-          zipCode: stats.zipCode,
-        }));
+      // Limit displayed results to 100
+      const limitedResults = allMatches.slice(0, 100);
 
       console.log('[useMarketSearch] Found matches:', { total: totalMatches, displayed: limitedResults.length });
       return { results: limitedResults, total: totalMatches };
