@@ -209,6 +209,20 @@ const uploadFiles = (
   }
 
   try {
+    // Upload markets index file first
+    console.log('📋 Uploading markets-index.json...');
+    const indexPath = path.join(baseDir, 'markets-index.json');
+    if (fs.existsSync(indexPath)) {
+      exec(
+        `gcloud storage cp "${indexPath}" gs://${bucketName}/markets-index.json ` +
+        `--cache-control="${cacheControl}" ` +
+        `--predefined-acl=publicRead`
+      );
+      console.log(`✅ Uploaded markets-index.json\n`);
+    } else {
+      console.warn(`⚠️  markets-index.json not found at ${indexPath}\n`);
+    }
+
     // Upload ZHVI files with public-read ACL
     console.log('📊 Uploading ZHVI files...');
     exec(
@@ -286,6 +300,15 @@ const setObjectAcls = (bucketName: string, dryRun: boolean): void => {
   }
 
   try {
+    // Set ACL on index file
+    console.log('Setting ACL on markets-index.json...');
+    exec(
+      `gcloud storage objects update "gs://${bucketName}/markets-index.json" ` +
+      `--predefined-acl=publicRead`,
+      true
+    );
+    console.log('✅ Index file ACL updated\n');
+
     // Set ACLs recursively on all objects
     console.log('Setting ACLs on ZHVI files...');
     exec(
@@ -379,6 +402,7 @@ const printSummary = (
   }
 
   console.log('\n🔗 Access URLs:');
+  console.log(`   https://storage.googleapis.com/${bucketName}/markets-index.json`);
   console.log(`   https://storage.googleapis.com/${bucketName}/zhvi/new-york-ny.csv`);
   console.log(`   https://storage.googleapis.com/${bucketName}/zori/new-york-ny.csv`);
 };
