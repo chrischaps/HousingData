@@ -1,16 +1,23 @@
 {
   "name": "housing-data-scripts",
   "version": "1.0.0",
-  "description": "Build scripts for HousingData project",
+  "description": "Data pipeline scripts for HousingData (split Zillow CSVs, publish to Cloud Storage)",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "split-csv": "ts-node scripts/split-csv.ts",
-    "upload-csv": "ts-node scripts/upload-to-cloud-storage.ts"
+    "verify-split": "ts-node scripts/verify-split.ts",
+    "upload-csv": "ts-node scripts/upload-to-cloud-storage.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "csv-parse": "^5.5.3"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
-    "csv-parse": "^5.5.3",
     "ts-node": "^10.9.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.9.3"
   }
 }
