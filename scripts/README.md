@@ -1,241 +1,107 @@
-# Housing Data Scripts
+# Housing Data Pipeline
 
-Scripts for managing and deploying housing market data.
+Scripts that turn Zillow's two city-level CSVs into the per-market files the app fetches from Cloud Storage. Run them from the repo root.
 
-## Scripts
+| Script | Command | What it does |
+|---|---|---|
+| `split-csv.ts` | `npm run split-csv` | Splits ZHVI + ZORI into one small CSV per market, writes `markets-index.json` and `manifest.json` |
+| `verify-split.ts` | `npm run verify-split` | Checks a few split files parse cleanly (header/row field counts match, last value numeric) |
+| `upload-to-cloud-storage.ts` | `npm run upload-csv` | Publishes the split output to the `housing-data-markets` bucket |
 
-### 1. split-csv.ts
+Shared code lives in `../shared/` (`marketKey.ts`, `csv.ts`) and is imported by both the scripts and the app so file names and CSV quoting can never drift apart.
 
-Splits the large Zillow ZHVI and ZORI CSV files into individual market files for on-demand loading.
+## How the data reaches users
 
-**Usage:**
-```powershell
-npm run split-csv
+```
+Zillow CSVs ──split-csv──▶ data/markets/            ──upload-csv──▶ gs://housing-data-markets/
+                            ├── zhvi/<key>.csv          rsync, 1-year immutable cache
+                            ├── zori/<key>.csv          rsync, 1-year immutable cache
+                            ├── markets-index.json      cp,    1-year immutable cache
+                            └── manifest.json           cp,    5-minute cache  ◀── uploaded last
 ```
 
-**Output:**
-- `housing-data-app/public/data/markets/zhvi/` - 21,450 home value files
-- `housing-data-app/public/data/markets/zori/` - 4,017 rental files
+Every CSV is served with `Cache-Control: public, max-age=31536000, immutable` under a stable name, so browsers keep it for a year. The app reads `manifest.json` (five-minute cache) once per session and appends `?v=<dataVersion>` to every other URL. A refresh therefore reaches returning users within five minutes, and clients only ever see a version whose files are all in place because the manifest goes up last.
 
-**Duration:** ~30 seconds
+`dataVersion` is `<last ZHVI date column>.<8 hex of sha256(zhvi + zori bytes)>`, e.g. `2026-08-31.848271e6`. It changes whenever the source bytes change, so a re-published month still busts the cache.
 
-### 2. upload-to-cloud-storage.ts
+## Monthly refresh
 
-Uploads split CSV files to Google Cloud Storage with CDN configuration.
+1. **Download** the two Zillow city files and replace the local copies:
+   - ZHVI: https://files.zillowstatic.com/research/public_csvs/zhvi/City_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv → `housing-data-app/public/data/default-housing-data.csv`
+   - ZORI: https://files.zillowstatic.com/research/public_csvs/zori/City_zori_uc_sfrcondomfr_sm_sa_month.csv → `housing-data-app/public/data/default-rental-data.csv`
 
-**Prerequisites:**
-```powershell
-# Install and authenticate with gcloud CLI
-gcloud auth login
-gcloud config set project YOUR_PROJECT_ID
+   Both are public. In PowerShell:
+   ```powershell
+   curl.exe -sSL -o housing-data-app/public/data/default-housing-data.csv "https://files.zillowstatic.com/research/public_csvs/zhvi/City_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv"
+   curl.exe -sSL -o housing-data-app/public/data/default-rental-data.csv  "https://files.zillowstatic.com/research/public_csvs/zori/City_zori_uc_sfrcondomfr_sm_sa_month.csv"
+   ```
 
-# Generate split files first
-npm run split-csv
+2. **Split and verify** (about 40 seconds):
+   ```powershell
+   npm run split-csv
+   npm run verify-split
+   ```
+   The output directory `data/markets/` (gitignored) is wiped first, so markets Zillow has dropped do not linger.
+
+3. **Publish** (about 3–5 minutes for a full refresh; unchanged files are skipped):
+   ```powershell
+   npm run upload-csv -- --dry-run --skip-bucket-creation --skip-acl
+   npm run upload-csv --           --skip-bucket-creation --skip-acl
+   ```
+   If the bucket already holds this exact `dataVersion` the script exits without doing anything. No app deployment is needed.
+
+4. **Check**:
+   ```powershell
+   curl.exe -sI https://storage.googleapis.com/housing-data-markets/manifest.json | Select-String cache-control
+   curl.exe -s  https://storage.googleapis.com/housing-data-markets/manifest.json
+   ```
+   Then open the app, hard-refresh once, and confirm a chart reaches the new month.
+
+## split-csv options
+
+```
+npm run split-csv -- --zhvi=<path> --zori=<path> --output=<dir> --quiet
 ```
 
-**Basic Usage:**
-```powershell
-# Upload to default bucket (housing-data-markets)
-npm run upload-csv
+Notes:
+- Fields are quoted per RFC 4180. Zillow's `Metro` and `CountyName` columns contain commas; before this was fixed, ~79% of markets had every date column shifted by one (issue #27).
+- About 26 Zillow rows are distinct places sharing a name within a state (two "Sheridan, MI"). Only one file can carry that name, so the first row (Zillow's SizeRank order) is kept and the rest are reported as warnings.
+- `markets-index.json` entries carry `hasRent: true|false` so the app can tell "no rental data" from "failed to load".
+- Exit code is non-zero if any row fails to write.
 
-# Dry run (preview what would be uploaded)
-npm run upload-csv -- --dry-run
+## upload-csv options
 
-# Upload to specific bucket
-npm run upload-csv -- --bucket=my-custom-bucket
-
-# Upload to different region
-npm run upload-csv -- --region=us-east1
-
-# Upload without CDN setup
-npm run upload-csv -- --no-cdn
-
-# Upload as private (not publicly readable)
-npm run upload-csv -- --private
+```
+--dry-run                 Show rsync's planned copies/deletes; touch nothing
+--force                   Re-upload even if the bucket already has this dataVersion,
+                          and override the safety guard below
+--skip-bucket-creation    Don't describe/create the bucket (CI service accounts lack the permission)
+--skip-acl                Don't (re)apply the allUsers objectViewer IAM binding
+--cdn                     Also ensure a Cloud CDN backend bucket exists (off by default)
+--bucket=<name>  --region=<region>  --source=<dir>  --cache-control=<value>
 ```
 
-**Advanced Options:**
-```powershell
-# Custom cache control headers
-npm run upload-csv -- --cache-control="public, max-age=86400"
+**Safety guard.** `rsync --delete-unmatched-destination-objects` will remove bucket objects that don't exist locally. If the local file count is below 90% of what the published manifest recorded, the script refuses to proceed. This is what stops a half-failed split from emptying the bucket. Don't remove it.
 
-# Skip bucket creation (if bucket already exists)
-npm run upload-csv -- --skip-bucket-creation
+Public access is bucket-level IAM (`allUsers` → `roles/storage.objectViewer`), set once. Per-object ACLs are no longer used.
 
-# Combine options
-npm run upload-csv -- --bucket=my-bucket --region=europe-west1 --no-cdn
-```
-
-**What it does:**
-1. ✅ Checks gcloud CLI setup and authentication
-2. ✅ Verifies split CSV files exist
-3. ✅ Creates Cloud Storage bucket (if needed)
-4. ✅ Uploads ZHVI and ZORI files with caching headers
-5. ✅ Makes bucket publicly readable
-6. ✅ Sets up CDN backend (optional)
-7. ✅ Prints access URLs and next steps
-
-**Output:**
-```
-🚀 Upload Split CSV Files to Cloud Storage
-═══════════════════════════════════════
-
-📋 Configuration:
-   Bucket: gs://housing-data-markets
-   Region: us-central1
-   Cache-Control: public, max-age=31536000
-   Public: true
-   CDN: true
-   Dry Run: false
-
-✅ Authenticated as: user@example.com
-✅ Project: my-project
-
-✅ Found 21450 ZHVI files
-✅ Found 4017 ZORI files
-
-📤 Uploading split CSV files to Cloud Storage...
-✅ Uploaded 21450 ZHVI files
-✅ Uploaded 4017 ZORI files
-
-═══════════════════════════════════════
-✅ Upload Complete!
-═══════════════════════════════════════
-Bucket: gs://housing-data-markets
-ZHVI files: 21450
-ZORI files: 4017
-Total files: 25467
-Duration: 127.45 seconds
-
-📝 Next Steps:
-   1. Update environment variables:
-      VITE_USE_SPLIT_CSV=true
-      VITE_MARKET_DATA_URL=https://storage.googleapis.com/housing-data-markets
-   2. Deploy to Cloud Run:
-      git push origin prod
-   3. Test the deployment
-```
-
-## Workflow: Updating Housing Data
-
-When new Zillow data is released (monthly), follow these steps:
-
-### Step 1: Update Source CSVs
-
-Download new ZHVI and ZORI files from Zillow and replace:
-- `housing-data-app/public/data/default-housing-data.csv` (ZHVI)
-- `housing-data-app/public/data/default-rental-data.csv` (ZORI)
-
-### Step 2: Split CSVs
+## One-time bucket setup
 
 ```powershell
-npm run split-csv
+gcloud storage buckets create gs://housing-data-markets --location=us-central1 --no-public-access-prevention
+gcloud storage buckets add-iam-policy-binding gs://housing-data-markets --member=allUsers --role=roles/storage.objectViewer
+gcloud storage buckets update gs://housing-data-markets --cors-file=cors.json   # see CLAUDE.md for cors.json
 ```
 
-This generates 25,467 individual market files.
+Or simply run `npm run upload-csv` once without `--skip-bucket-creation --skip-acl`.
 
-### Step 3: Upload to Cloud Storage
+## Cost
 
-```powershell
-# Dry run first to preview
-npm run upload-csv -- --dry-run
-
-# Actually upload
-npm run upload-csv
-```
-
-### Step 4: Invalidate CDN Cache (if using CDN)
-
-```powershell
-gcloud compute url-maps invalidate-cdn-cache housing-data-url-map --path "/*"
-```
-
-### Step 5: Verify
-
-Test that new data is showing:
-```powershell
-# Check a specific market
-curl https://storage.googleapis.com/housing-data-markets/zhvi/new-york-ny.csv
-```
-
-Visit your app and verify the latest month is showing in the charts.
-
-## Cost Estimates
-
-### Cloud Storage Costs
-
-**Storage:**
-- 25,467 files × 50KB average = ~1.3GB
-- Cost: $0.026/GB/month × 1.3GB = **$0.034/month**
-
-**Network Egress** (10,000 users × 5 markets × 70KB):
-- 3.5GB/month transfer
-- First 1GB free, then $0.12/GB
-- Cost: $0.12 × 2.5GB = **$0.30/month**
-
-**CDN** (optional, 90% cache hit rate):
-- Reduces origin egress by 90%
-- CDN egress: $0.08/GB × 3.5GB = **$0.28/month**
-- Origin egress: $0.12/GB × 0.35GB = **$0.04/month**
-- Total with CDN: **$0.32/month**
-
-**Total Cost:** $0.30-0.35/month
+Roughly 26,000 objects at ~50 KB each is about 1.3 GB, or a few cents a month in storage. Egress for ~10k users viewing a handful of markets each is around $0.30/month. The Cloud Run container is separate and near-free at zero minimum instances.
 
 ## Troubleshooting
 
-### "gcloud: command not found"
-
-Install the gcloud CLI:
-- **Windows**: https://cloud.google.com/sdk/docs/install#windows
-- **Mac**: `brew install google-cloud-sdk`
-- **Linux**: https://cloud.google.com/sdk/docs/install#linux
-
-### "Not authenticated"
-
-```powershell
-gcloud auth login
-gcloud config set project YOUR_PROJECT_ID
-```
-
-### "Bucket already exists"
-
-Use `--skip-bucket-creation` flag:
-```powershell
-npm run upload-csv -- --skip-bucket-creation
-```
-
-### "Permission denied"
-
-Ensure you have these IAM roles:
-- `roles/storage.admin` (to create buckets and upload files)
-- `roles/compute.networkAdmin` (to create CDN backend)
-
-```powershell
-gcloud projects add-iam-policy-binding PROJECT_ID \
-  --member="user:YOUR_EMAIL" \
-  --role="roles/storage.admin"
-```
-
-### Upload is slow
-
-The initial upload of 25k+ files takes 2-5 minutes depending on your internet connection. Subsequent uploads are faster since gcloud skips unchanged files.
-
-To speed up:
-- Use `--no-cdn` to skip CDN setup
-- Upload from a machine with faster internet
-- Use `gcloud storage` instead of `gsutil` (already used in script)
-
-### Files not showing as public
-
-Manually make bucket public:
-```powershell
-gcloud storage buckets add-iam-policy-binding gs://housing-data-markets \
-  --member=allUsers \
-  --role=roles/storage.objectViewer
-```
-
-## See Also
-
-- [CLOUD_STORAGE_SETUP.md](../CLOUD_STORAGE_SETUP.md) - Detailed Cloud Storage setup guide
-- [SPLIT_CSV_README.md](../SPLIT_CSV_README.md) - Split CSV feature overview
-- [DATA_OPTIMIZATION_GUIDE.md](../DATA_OPTIMIZATION_GUIDE.md) - Comprehensive optimization strategies
+- **`gcloud is not authenticated`** or `invalid_grant` errors: credentials expire silently. Run `gcloud auth login`.
+- **Refusing to rsync --delete**: the split produced far fewer files than last time. Check the source download completed (ZHVI should be 60–200 MB) before using `--force`.
+- **Windows warnings from gcloud about invalid characters**: cosmetic, they concern gcloud's own temp-file names.
+- **Old numbers still showing in the browser**: the deployed app must include the manifest/`?v=` support (v0.10.0+). Until then, hard-refresh.

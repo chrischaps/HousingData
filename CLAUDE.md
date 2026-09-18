@@ -801,12 +801,11 @@ npm run upload-csv -- --bucket=my-bucket --region=us-east1  # Custom options
 
 **Monthly Data Update Workflow:**
 
-See `scripts/README.md` for complete workflow. Quick version:
-1. Download new ZHVI/ZORI from Zillow
-2. Replace `housing-data-app/public/data/default-housing-data.csv` and `default-rental-data.csv`
-3. Run `npm run split-csv`
-4. Run `npm run upload-csv`
-5. Data is immediately available (no deployment needed due to CDN caching)
+See `scripts/README.md` for the full workflow. Quick version (run from repo root):
+1. Download the two public Zillow city CSVs (URLs in `scripts/README.md`) over the files in `housing-data-app/public/data/`
+2. `npm run split-csv` then `npm run verify-split` (output goes to `data/markets/`, gitignored)
+3. `npm run upload-csv -- --dry-run --skip-bucket-creation --skip-acl`, then the same without `--dry-run`
+4. Done. No deployment needed: the app reads `manifest.json` (5-minute cache) and appends `?v=<dataVersion>` to every CSV URL, so returning browsers pick up the new data within minutes despite the 1-year cache on the CSVs themselves.
 
 **Cost Estimates:**
 - Storage: ~$0.03/month for 1.3GB (25k files)
