@@ -88,19 +88,13 @@ When using the Bash tool for command execution:
 This is a housing market data visualization web application modeled after Google Finance, designed to display customizable graphs and analytics for various housing markets (single-family homes, apartments, rentals, etc.) across different cities and regions.
 
 **Current Status**: Production app with Firebase authentication, Firestore favorites, market comparison, and split CSV optimization
-- **POC (housing-data-poc)**: Complete proof of concept with CSV data loading, charts, Cloud Run deployment (v0.3.0)
+- **POC**: the original proof of concept lives in its own repo, https://github.com/chrischaps/HousingData-POC (archived reference; no longer a submodule here)
 - **Production App (housing-data-app)**: Feature-complete MVP (v0.7.0) with real-time favorites, comparison, and on-demand data loading via split CSV from Cloud Storage (99.5% reduction in initial page load: 85.6 MB → ~420 KB)
 
 ## Repository Structure
 
 ```
 HousingData/
-├── housing-data-poc/          # POC application (submodule)
-│   ├── src/                   # POC source code
-│   ├── public/data/           # Default CSV data
-│   ├── Dockerfile             # Cloud Run deployment
-│   └── README.md              # POC documentation
-│
 ├── housing-data-app/          # Production application (ACTIVE)
 │   ├── src/
 │   │   ├── components/        # UI components
@@ -224,25 +218,6 @@ git pull origin master
 git push origin master
 ```
 
-**Issue: Submodule in "modified content" state**
-This occurs when the submodule has uncommitted changes.
-
-**Solution**: Commit changes in the submodule first:
-```powershell
-# Navigate to submodule
-cd housing-data-poc
-
-# Commit submodule changes
-git add .
-git commit -m "Your commit message"
-git push origin master
-
-# Return to main repo and commit submodule reference
-cd ..
-git add housing-data-poc
-git commit -m "Update submodule reference"
-```
-
 **Issue: Temporary files being staged**
 Files like `.env~`, `*.un~` (vim backup files) should not be committed.
 
@@ -280,34 +255,12 @@ git checkout prod && git merge master && git push origin prod
 
 **Important**: The production app requires Firebase configuration. See `housing-data-app/README.md` for setup instructions.
 
-### POC Development (housing-data-poc) - REFERENCE ONLY
-```powershell
-# Initialize POC project
-npm create vite@latest housing-data-poc -- --template react-ts
-cd housing-data-poc
-npm install
-
-# Install dependencies
-npm install recharts axios
-npm install -D tailwindcss postcss autoprefixer
-npx tailwindcss init -p
-
-# Development
-npm run dev              # Start dev server (default: http://localhost:5173)
-npm run build           # Build for production
-npm run preview         # Preview production build
-
-# Deployment
-vercel                  # Deploy to Vercel
-vercel --prod          # Deploy to production
-```
-
 ### Build Verification (IMPORTANT)
 
 **⚠️ ALWAYS run a build after making code changes to catch TypeScript errors early:**
 
 ```powershell
-cd housing-data-poc
+cd housing-data-app
 npm run build
 ```
 
@@ -639,38 +592,6 @@ POC deployment to Vercel:
 6. Redeploy if environment variables were added after initial deploy
 
 **Note:** The default CSV file in `public/data/` will be automatically included in the Vercel deployment and served as a static asset, so users will see data immediately without any configuration.
-
-### Google Cloud Run (Serverless)
-
-The default CSV file is **86MB**, which can cause issues with serverless deployments. See `housing-data-poc/CLOUD_RUN_DEPLOYMENT.md` for detailed solutions.
-
-**Quick Solution - Use Cloud Storage:**
-
-1. Upload CSV to Google Cloud Storage:
-   ```powershell
-   gsutil mb gs://your-housing-data-assets
-   gsutil iam ch allUsers:objectViewer gs://your-housing-data-assets
-   gsutil cp housing-data-poc/public/data/default-housing-data.csv `
-     gs://your-housing-data-assets/default-housing-data.csv
-   ```
-
-2. Deploy to Cloud Run from source:
-   ```powershell
-   cd housing-data-poc
-   gcloud run deploy housing-data-poc `
-     --source . `
-     --region us-central1 `
-     --platform managed `
-     --allow-unauthenticated `
-     --port 8080 `
-     --set-env-vars VITE_DEFAULT_CSV_URL=https://storage.googleapis.com/your-bucket-name/default-housing-data.csv
-   ```
-
-**Benefits:** Smaller container (~15MB vs ~100MB), faster cold starts, easy to update CSV without redeploying.
-
-**Note:** The `--source .` flag builds and deploys directly from source code. Cloud Run will automatically detect the Node.js app and build it.
-
-See `housing-data-poc/CLOUD_RUN_DEPLOYMENT.md` for complete deployment guide with multiple options.
 
 ### Production App (housing-data-app) - Google Cloud Run with CI/CD
 
