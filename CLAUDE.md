@@ -799,13 +799,12 @@ npm run upload-csv -- --bucket=my-bucket --region=us-east1  # Custom options
    - GCS bucket needs `allUsers` with `roles/storage.objectViewer` for public read
    - Objects uploaded with `--predefined-acl=publicRead` are immediately accessible
 
-**Monthly Data Update Workflow:**
+**Data Refresh (automated):**
 
-See `scripts/README.md` for the full workflow. Quick version (run from repo root):
-1. Download the two public Zillow city CSVs (URLs in `scripts/README.md`) over the files in `housing-data-app/public/data/`
-2. `npm run split-csv` then `npm run verify-split` (output goes to `data/markets/`, gitignored)
-3. `npm run upload-csv -- --dry-run --skip-bucket-creation --skip-acl`, then the same without `--dry-run`
-4. Done. No deployment needed: the app reads `manifest.json` (5-minute cache) and appends `?v=<dataVersion>` to every CSV URL, so returning browsers pick up the new data within minutes despite the 1-year cache on the CSVs themselves.
+`.github/workflows/refresh-data.yml` runs `npm run refresh-data` weekly: downloads the public Zillow city CSVs, validates, splits to `data/markets/` (gitignored), publishes to `gs://housing-data-markets` via rsync, verifies, and commits `scripts/data/manifest.json`. Exits early when Zillow has no newer month. Manual equivalents (repo root):
+- `npm run refresh-data -- --dry-run` / `npm run refresh-data` / `npm run refresh-data -- --force`
+- `npm run fetch-data` downloads just the source CSVs (they are not tracked in git)
+- No deployment needed after a refresh: the app reads `manifest.json` (5-minute cache) and appends `?v=<dataVersion>` to every CSV URL. See `scripts/README.md`.
 
 **Cost Estimates:**
 - Storage: ~$0.03/month for 1.3GB (25k files)

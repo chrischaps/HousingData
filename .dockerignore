@@ -50,3 +50,8 @@ housing-data-app/.vite
 
 # POC (not needed for production app deployment)
 housing-data-poc/
+
+# Zillow source CSVs: the app fetches split files from Cloud Storage; never bake ~99 MB into the image
+housing-data-app/public/data/*.csv
+# Local pipeline output
+data/
