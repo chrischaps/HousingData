@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { CSVProvider, clearProviderCache } from '../services/providers';
 import { IndexedDBCache } from '../utils/indexedDBCache';
 import { ApiStatusIndicator } from './ApiStatusIndicator';
+import { DataVintage } from './DataVintage';
 
 interface MobileSettingsModalProps {
   isOpen: boolean;
@@ -149,6 +150,9 @@ export const MobileSettingsModal = ({ isOpen, onClose, onDataChange }: MobileSet
                     }`}>
                       Source: {dataSource === 'default' ? 'Default dataset' : 'Custom upload'}
                     </p>
+                    <DataVintage className={`text-xs mt-0.5 ${
+                      isUsingDefault ? 'text-blue-600 dark:text-blue-500' : 'text-green-600 dark:text-green-500'
+                    }`} />
                   </div>
                 </div>
               </div>

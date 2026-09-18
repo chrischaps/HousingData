@@ -12,6 +12,10 @@ RUN npm ci
 # Copy source code from housing-data-app
 COPY housing-data-app/ ./
 
+# Shared pipeline/app modules live one level above the app package and are
+# imported as ../../../../shared/* from src/, i.e. /shared when the app is /app.
+COPY shared/ /shared/
+
 # Accept build arguments for Firebase config (passed from Cloud Run)
 ARG VITE_FIREBASE_API_KEY
 ARG VITE_FIREBASE_AUTH_DOMAIN

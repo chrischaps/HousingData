@@ -32,9 +32,10 @@ export abstract class BaseProvider implements IHousingDataProvider {
   }
 
   /**
-   * Get cache key for market stats
+   * Get cache key for market stats.
+   * May be async so providers can fold a data version into the key.
    */
-  protected getMarketStatsCacheKey(location: string): string {
+  protected getMarketStatsCacheKey(location: string): string | Promise<string> {
     return `${this.info.id}:market-stats:${location}`;
   }
 
@@ -49,7 +50,7 @@ export abstract class BaseProvider implements IHousingDataProvider {
    * Get market statistics with caching
    */
   async getMarketStats(location: string, forceRefresh: boolean = false): Promise<MarketStats | null> {
-    const cacheKey = this.getMarketStatsCacheKey(location);
+    const cacheKey = await this.getMarketStatsCacheKey(location);
 
     // Check cache first (unless force refresh)
     if (!forceRefresh) {

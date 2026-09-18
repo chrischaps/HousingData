@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { CSVProvider, clearProviderCache } from '../services/providers';
 import { IndexedDBCache } from '../utils/indexedDBCache';
 import { ApiStatusIndicator } from './ApiStatusIndicator';
+import { DataVintage } from './DataVintage';
 import { useTheme } from '../contexts/ThemeContext';
 
 interface SettingsPanelProps {
@@ -155,6 +156,9 @@ export const SettingsPanel = ({ onDataChange }: SettingsPanelProps) => {
                   }`}>
                     Source: {dataSource === 'default' ? 'Default dataset' : 'Custom upload'}
                   </p>
+                  <DataVintage className={`text-xs ${
+                    isUsingDefault ? 'text-blue-600 dark:text-blue-500' : 'text-green-600 dark:text-green-500'
+                  }`} />
                 </div>
               </div>
             </div>
