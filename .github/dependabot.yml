@@ -1,0 +1,37 @@
+version: 2
+updates:
+  # Production app
+  - package-ecosystem: npm
+    directory: /housing-data-app
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Majors are taken deliberately, one PR each (vite, typescript, eslint...).
+      - dependency-name: '*'
+        update-types: [version-update:semver-major]
+
+  # Data pipeline scripts
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 3
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  # Workflow actions
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+
+  # Base images in the Dockerfile
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: monthly
