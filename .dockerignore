@@ -1,12 +1,10 @@
 # Dependencies
 node_modules
 housing-data-app/node_modules
-housing-data-poc/node_modules
 
 # Build outputs
 dist
 housing-data-app/dist
-housing-data-poc/dist
 
 # Git
 .git
@@ -23,7 +21,6 @@ housing-data-poc/dist
 .env.*.local
 housing-data-app/.env
 housing-data-app/.env.local
-housing-data-poc/.env
 
 # Logs
 npm-debug.log*
@@ -48,5 +45,3 @@ Thumbs.db
 housing-data-app/.vite
 .firebase
 
-# POC (not needed for production app deployment)
-housing-data-poc/
