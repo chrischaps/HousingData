@@ -9,21 +9,17 @@ import { BaseProvider } from './base.provider';
 import type { MarketStats, ProviderInfo } from './types';
 import { parseCSV, validateCSVContent, parseRentalCSV, mergeRentalData } from '../../utils/csvParser';
 import { IndexedDBCache } from '../../utils/indexedDBCache';
+import { USE_SPLIT_CSV, MARKET_DATA_BASE_URL, DEFAULT_ZHVI_PATH, DEFAULT_ZORI_PATH } from './config';
+import { getDataVersion, withVersion } from '../dataVersion';
+import { marketKeyFromLocation } from '../../../../shared/marketKey';
+import { parseCsvLine } from '../../../../shared/csv';
 
 const CSV_FILENAME_STORAGE_KEY = 'csv-file-name';
 const CSV_MARKETS_STORAGE_KEY = 'csv-parsed-markets';
 const CSV_DATA_SOURCE_KEY = 'csv-data-source'; // 'default' or 'user-upload'
 
-// Support environment variable for Cloud Run / serverless deployments
-// Use VITE_DEFAULT_CSV_URL to point to Cloud Storage or CDN
-// Falls back to local file in public folder
-const DEFAULT_ZHVI_PATH = import.meta.env.VITE_DEFAULT_CSV_URL || '/data/default-housing-data.csv';
-const DEFAULT_ZORI_PATH = import.meta.env.VITE_DEFAULT_ZORI_URL || '/data/default-rental-data.csv';
-
-// Support for split CSV files (one file per market)
-// When USE_SPLIT_CSV is true, fetches individual market files instead of full CSV
-const USE_SPLIT_CSV = import.meta.env.VITE_USE_SPLIT_CSV === 'true';
-const MARKET_DATA_BASE_URL = import.meta.env.VITE_MARKET_DATA_URL || '/data/markets';
+/** Zillow date columns look like 2026-08-31. */
+const DATE_COLUMN = /^\d{4}-\d{2}-\d{2}$/;
 
 export class CSVProvider extends BaseProvider {
   private cachedMarkets: Map<string, MarketStats> = new Map();
@@ -537,15 +533,53 @@ export class CSVProvider extends BaseProvider {
     );
   }
 
+
   /**
-   * Normalize location to create safe filename
+   * Cache key includes the published data version so IndexedDB entries roll
+   * over when the pipeline publishes a new month (the 24h TTL alone would
+   * otherwise serve stale stats for a day after a refresh).
    */
-  private normalizeLocationToFilename(location: string): string {
-    return location
-      .toLowerCase()
-      .replace(/[^a-z0-9-]/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
+  protected override async getMarketStatsCacheKey(location: string): Promise<string> {
+    const version = USE_SPLIT_CSV ? await getDataVersion() : '';
+    return `${this.info.id}:market-stats:${version ? `${version}:` : ''}${location}`;
+  }
+
+  /**
+   * Parse one split market file: a header row and a single data row.
+   * Returns the metadata columns by name and the (date, value) series.
+   */
+  private parseSplitFile(
+    content: string,
+    valueKey: 'price' | 'rent'
+  ): { meta: Record<string, string>; series: Array<Record<'date', string> & Record<'price' | 'rent', number>> } | null {
+    const lines = content.split(/\r?\n/).filter((l) => l.length > 0);
+    if (lines.length < 2) return null;
+
+    const headers = parseCsvLine(lines[0]);
+    const values = parseCsvLine(lines[1]);
+    if (headers.length !== values.length) {
+      console.warn('%c[CSV Provider] Split file header/row mismatch', 'color: #F59E0B', {
+        headers: headers.length,
+        values: values.length,
+      });
+      return null;
+    }
+
+    const meta: Record<string, string> = {};
+    const series: Array<Record<'date', string> & Record<'price' | 'rent', number>> = [];
+
+    headers.forEach((header, i) => {
+      if (DATE_COLUMN.test(header)) {
+        const n = parseFloat(values[i]);
+        if (!Number.isNaN(n)) {
+          series.push({ date: header, [valueKey]: n } as Record<'date', string> & Record<'price' | 'rent', number>);
+        }
+      } else {
+        meta[header] = values[i];
+      }
+    });
+
+    return { meta, series };
   }
 
   /**
@@ -553,161 +587,73 @@ export class CSVProvider extends BaseProvider {
    */
   private async fetchSplitMarketFile(location: string): Promise<MarketStats | null> {
     try {
-      const marketKey = this.normalizeLocationToFilename(location);
+      const marketKey = marketKeyFromLocation(location);
 
-      // Fetch both ZHVI and ZORI files for this market
-      const zhviUrl = `${MARKET_DATA_BASE_URL}/zhvi/${marketKey}.csv`;
-      const zoriUrl = `${MARKET_DATA_BASE_URL}/zori/${marketKey}.csv`;
-
-      console.log(
-        '%c[CSV Provider] Fetching split market files',
-        'color: #8B5CF6',
-        { location, marketKey, zhviUrl, zoriUrl }
-      );
+      const [zhviUrl, zoriUrl] = await Promise.all([
+        withVersion(`${MARKET_DATA_BASE_URL}/zhvi/${marketKey}.csv`),
+        withVersion(`${MARKET_DATA_BASE_URL}/zori/${marketKey}.csv`),
+      ]);
 
       const [zhviResponse, zoriResponse] = await Promise.all([
         fetch(zhviUrl).catch(() => null),
-        fetch(zoriUrl).catch(() => null)
+        fetch(zoriUrl).catch(() => null),
       ]);
 
       if (!zhviResponse || !zhviResponse.ok) {
-        console.warn(
-          '%c[CSV Provider] ZHVI file not found',
-          'color: #F59E0B',
-          { location, marketKey }
-        );
+        console.warn('%c[CSV Provider] ZHVI file not found', 'color: #F59E0B', { location, marketKey });
         return null;
       }
 
-      // Parse ZHVI file
-      const zhviContent = await zhviResponse.text();
-      const zhviLines = zhviContent.trim().split('\n');
-
-      console.log(
-        '%c[CSV Provider] Parsing ZHVI file',
-        'color: #8B5CF6',
-        { location, marketKey, lines: zhviLines.length, firstLine: zhviLines[0].substring(0, 100) }
-      );
-
-      if (zhviLines.length < 2) {
-        console.warn('%c[CSV Provider] Invalid ZHVI file', 'color: #F59E0B', { location });
+      const zhvi = this.parseSplitFile(await zhviResponse.text(), 'price');
+      if (!zhvi || zhvi.series.length === 0) {
+        console.warn('%c[CSV Provider] Invalid or empty ZHVI file', 'color: #F59E0B', { location });
         return null;
       }
 
-      const zhviHeaders = zhviLines[0].split(',');
-      const zhviValues = zhviLines[1].split(',');
-
-      console.log(
-        '%c[CSV Provider] Parsed ZHVI headers and values',
-        'color: #8B5CF6',
-        {
-          headers: zhviHeaders.length,
-          values: zhviValues.length,
-          regionId: zhviValues[0],
-          regionName: zhviValues[1],
-          state: zhviValues[2]
-        }
-      );
-
-      // Extract basic market info
-      const regionId = zhviValues[0];
-      const regionName = zhviValues[1];
-      const state = zhviValues[2];
-      const city = regionName.split(',')[0].trim();
-
-      // Extract historical prices (date columns start at index 8 after metadata columns)
-      const historicalPrices: Array<{ date: string; price: number }> = [];
-
-      for (let i = 8; i < zhviHeaders.length; i++) {
-        const date = zhviHeaders[i];
-        const price = parseFloat(zhviValues[i]);
-        if (!isNaN(price)) {
-          historicalPrices.push({ date, price });
-        }
-      }
-
-      if (historicalPrices.length === 0) {
-        return null;
-      }
-
-      const currentPrice = historicalPrices[historicalPrices.length - 1].price;
-      const previousPrice = historicalPrices.length >= 2 ? historicalPrices[historicalPrices.length - 2].price : currentPrice;
-
-      // Calculate percent change from previous data point
-      let percentChange = 0;
-      if (previousPrice > 0) {
-        percentChange = ((currentPrice - previousPrice) / previousPrice) * 100;
-      }
+      const historicalPrices = zhvi.series as Array<{ date: string; price: number }>;
+      const latest = historicalPrices[historicalPrices.length - 1];
+      const previous = historicalPrices.length >= 2 ? historicalPrices[historicalPrices.length - 2] : latest;
+      const percentChange = previous.price > 0 ? ((latest.price - previous.price) / previous.price) * 100 : 0;
 
       const marketStats: MarketStats = {
-        id: regionId,
-        city,
-        state,
+        id: zhvi.meta.RegionID,
+        city: zhvi.meta.RegionName,
+        state: zhvi.meta.State,
         saleData: {
-          medianPrice: currentPrice,
-          minPrice: Math.min(...historicalPrices.map(h => h.price)),
-          maxPrice: Math.max(...historicalPrices.map(h => h.price)),
-          lastUpdatedDate: new Date().toISOString()
+          medianPrice: latest.price,
+          minPrice: Math.min(...historicalPrices.map((h) => h.price)),
+          maxPrice: Math.max(...historicalPrices.map((h) => h.price)),
+          // The date of the newest observation, not the moment we fetched it.
+          lastUpdatedDate: latest.date,
         },
         percentChange,
-        historicalPrices
+        historicalPrices,
       };
 
-      // Parse ZORI file if available
       if (zoriResponse && zoriResponse.ok) {
-        const zoriContent = await zoriResponse.text();
-        const zoriLines = zoriContent.trim().split('\n');
-
-        if (zoriLines.length >= 2) {
-          const zoriHeaders = zoriLines[0].split(',');
-          const zoriValues = zoriLines[1].split(',');
-
-          const historicalRentals: Array<{ date: string; rent: number }> = [];
-
-          for (let i = 8; i < zoriHeaders.length; i++) {
-            const date = zoriHeaders[i];
-            const rent = parseFloat(zoriValues[i]);
-            if (!isNaN(rent)) {
-              historicalRentals.push({ date, rent });
-            }
-          }
-
-          if (historicalRentals.length > 0) {
-            const currentRent = historicalRentals[historicalRentals.length - 1].rent;
-            const previousRent = historicalRentals.length >= 2 ? historicalRentals[historicalRentals.length - 2].rent : currentRent;
-
-            // Calculate rent change from previous data point
-            let rentChange = 0;
-            if (previousRent > 0) {
-              rentChange = ((currentRent - previousRent) / previousRent) * 100;
-            }
-
-            marketStats.rentalData = {
-              medianRent: currentRent
-            };
-            marketStats.rentChange = rentChange;
-            marketStats.historicalRentals = historicalRentals;
-          }
+        const zori = this.parseSplitFile(await zoriResponse.text(), 'rent');
+        if (zori && zori.series.length > 0) {
+          const historicalRentals = zori.series as Array<{ date: string; rent: number }>;
+          const latestRent = historicalRentals[historicalRentals.length - 1];
+          const previousRent =
+            historicalRentals.length >= 2 ? historicalRentals[historicalRentals.length - 2] : latestRent;
+          marketStats.rentalData = { medianRent: latestRent.rent, lastUpdatedDate: latestRent.date };
+          marketStats.rentChange =
+            previousRent.rent > 0 ? ((latestRent.rent - previousRent.rent) / previousRent.rent) * 100 : 0;
+          marketStats.historicalRentals = historicalRentals;
         }
       }
 
-      console.log(
-        '%c[CSV Provider] ✓ Loaded split market files',
-        'color: #10B981',
-        {
-          location,
-          prices: historicalPrices.length,
-          rentals: marketStats.historicalRentals?.length || 0
-        }
-      );
+      console.log('%c[CSV Provider] ✓ Loaded split market files', 'color: #10B981', {
+        location,
+        through: latest.date,
+        prices: historicalPrices.length,
+        rentals: marketStats.historicalRentals?.length || 0,
+      });
 
       return marketStats;
     } catch (error) {
-      console.error(
-        '%c[CSV Provider] Failed to fetch split market files',
-        'color: #EF4444',
-        { location, error }
-      );
+      console.error('%c[CSV Provider] Failed to fetch split market files', 'color: #EF4444', { location, error });
       return null;
     }
   }

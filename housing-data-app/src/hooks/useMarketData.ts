@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { MarketPriceData } from '../types';
 import { createProvider, getProviderType, CSVProvider } from '../services/providers';
+import { USE_SPLIT_CSV } from '../services/providers/config';
 import {
   transformToMarketPriceData,
   generateHistoricalData,
@@ -164,10 +165,7 @@ export const useMarketData = (): UseMarketDataResult => {
     try {
       // For CSV provider, get markets directly from the loaded data
       if (providerType === 'csv' && provider instanceof CSVProvider) {
-        // Check if using split CSV mode
-        const useSplitCSV = import.meta.env.VITE_USE_SPLIT_CSV === 'true';
-
-        if (useSplitCSV) {
+        if (USE_SPLIT_CSV) {
           // Split CSV mode: Fetch featured markets individually
           console.log(
             '%c[useMarketData] Split CSV mode - fetching featured markets on-demand',
