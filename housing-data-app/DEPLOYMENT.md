@@ -46,43 +46,18 @@ Complete deployment instructions for the production housing-data-app to Google C
 
 ### 4. Deploy Firestore Security Rules
 
-1. Go to **Firestore Database** > **Rules** tab
-2. Copy the following rules from `housing-data-app/firestore.rules`:
+The rules live in `housing-data-app/firestore.rules` and are the single source of truth. Deploy them from the repo rather than pasting into the console, so what is enforced always matches what is committed.
 
-```javascript
-rules_version = '2';
-
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // Favorites collection rules
-    match /favorites/{favoriteId} {
-      allow read: if request.auth != null
-        && request.auth.uid == resource.data.userId;
-
-      allow create: if request.auth != null
-        && request.auth.uid == request.resource.data.userId;
-
-      allow update: if request.auth != null
-        && request.auth.uid == resource.data.userId
-        && request.auth.uid == request.resource.data.userId;
-
-      allow delete: if request.auth != null
-        && request.auth.uid == resource.data.userId;
-    }
-
-    match /favorites/{document=**} {
-      allow list: if request.auth != null
-        && request.query.limit <= 100;
-    }
-
-    match /{document=**} {
-      allow read, write: if false;
-    }
-  }
-}
+```powershell
+cd housing-data-app
+npm install -g firebase-tools   # once
+firebase login                  # once
+firebase deploy --only firestore:rules
 ```
 
-3. Click **Publish**
+`firebase.json` and `.firebaserc` (project `ccc-housing-data`) are already configured. The rules enforce per-user ownership on every operation and validate the shape of each favorite document. There is intentionally no wildcard `list` rule; queries must be constrained to the caller's own `userId`, which the app already does.
+
+To verify after deploying, open **Firestore Database > Rules > Rules Playground** and simulate a `list` on `/favorites` as an authenticated user with no `where` filter. It must be denied.
 
 ### 5. Get Firebase Configuration
 

@@ -2,33 +2,60 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Favorites collection rules
+
+    // ---- helpers -------------------------------------------------------
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function ownsExisting() {
+      return signedIn() && request.auth.uid == resource.data.userId;
+    }
+
+    function ownsIncoming() {
+      return signedIn() && request.auth.uid == request.resource.data.userId;
+    }
+
+    // A favorite document may contain only these keys, with these types.
+    // `createdAt` is a Firestore Timestamp written by the client; `addedAt`
+    // is the same instant as an ISO string used for display.
+    function validFavorite(data) {
+      return data.keys().hasOnly(['userId', 'marketId', 'marketName', 'notes', 'addedAt', 'createdAt'])
+        && data.keys().hasAll(['userId', 'marketId', 'marketName', 'addedAt'])
+        && data.userId is string
+        && data.marketId is string && data.marketId.size() > 0 && data.marketId.size() <= 200
+        && data.marketName is string && data.marketName.size() > 0 && data.marketName.size() <= 200
+        && (!('notes' in data) || (data.notes is string && data.notes.size() <= 2000))
+        && data.addedAt is string && data.addedAt.size() <= 40
+        && (!('createdAt' in data) || data.createdAt is timestamp);
+    }
+
+    // ---- favorites -----------------------------------------------------
+    //
+    // `read` covers both `get` and `list`. For a `list`, Firestore evaluates
+    // the rule against the query, so only queries constrained to the caller's
+    // own userId (e.g. where('userId', '==', uid)) are permitted. There is
+    // deliberately no separate wildcard `list` rule: an earlier version had
+    // one without a userId predicate, which let any signed-in user list up to
+    // 100 of anyone's favorites (issue #26).
+
     match /favorites/{favoriteId} {
-      // Allow users to read only their own favorites
-      allow read: if request.auth != null
-        && request.auth.uid == resource.data.userId;
+      allow read: if ownsExisting();
 
-      // Allow users to create favorites for themselves
-      allow create: if request.auth != null
-        && request.auth.uid == request.resource.data.userId;
+      allow create: if ownsIncoming()
+        && validFavorite(request.resource.data);
 
-      // Allow users to update only their own favorites
-      allow update: if request.auth != null
-        && request.auth.uid == resource.data.userId
-        && request.auth.uid == request.resource.data.userId;
+      // Owner may edit, but never reassign the document to another user.
+      allow update: if ownsExisting()
+        && ownsIncoming()
+        && validFavorite(request.resource.data);
 
-      // Allow users to delete only their own favorites
-      allow delete: if request.auth != null
-        && request.auth.uid == resource.data.userId;
+      allow delete: if ownsExisting();
     }
 
-    // Allow users to query their own favorites
-    match /favorites/{document=**} {
-      allow list: if request.auth != null
-        && request.query.limit <= 100;
-    }
+    // ---- default deny --------------------------------------------------
 
-    // Deny all other access by default
     match /{document=**} {
       allow read, write: if false;
     }
