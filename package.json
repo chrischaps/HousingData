@@ -10,6 +10,8 @@
     "split-csv": "ts-node scripts/split-csv.ts",
     "verify-split": "ts-node scripts/verify-split.ts",
     "upload-csv": "ts-node scripts/upload-to-cloud-storage.ts",
+    "refresh-data": "ts-node scripts/refresh-data.ts",
+    "fetch-data": "ts-node scripts/refresh-data.ts --download-only",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {

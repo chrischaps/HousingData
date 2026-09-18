@@ -24,7 +24,24 @@ Every CSV is served with `Cache-Control: public, max-age=31536000, immutable` un
 
 `dataVersion` is `<last ZHVI date column>.<8 hex of sha256(zhvi + zori bytes)>`, e.g. `2026-08-31.848271e6`. It changes whenever the source bytes change, so a re-published month still busts the cache.
 
-## Monthly refresh
+## Refresh: automated
+
+`.github/workflows/refresh-data.yml` runs `npm run refresh-data` every Tuesday. The script downloads both Zillow files, validates them (size, row count within 15% of last time, date columns, at least 80% of rows filled in the newest month), splits, publishes with rsync, verifies the bucket, and commits `scripts/data/manifest.json` so the git log records every data version. If Zillow hasn't published a newer month it exits 0 and nothing changes. Failures open a GitHub issue labelled `data-refresh`.
+
+Run it by hand from the Actions tab (`Run workflow`), optionally with `dry_run` or `force`, or locally:
+
+```powershell
+npm run refresh-data -- --dry-run     # download, validate, split, show rsync plan
+npm run refresh-data                  # publish if a newer month exists
+npm run refresh-data -- --force       # re-publish the same month
+npm run fetch-data                    # just download the source CSVs (they are not in git)
+```
+
+One-time GCP setup for the workflow (Workload Identity Federation, no long-lived keys) is in the PR that added it; the two GitHub repository variables it needs are `GCP_WORKLOAD_IDENTITY_PROVIDER` and `GCP_REFRESH_SERVICE_ACCOUNT`.
+
+## Refresh: by hand
+
+The source CSVs are not tracked in git (they are ~99 MB and grow monthly). `npm run fetch-data` downloads them; the steps below are what `refresh-data` does internally.
 
 1. **Download** the two Zillow city files and replace the local copies:
    - ZHVI: https://files.zillowstatic.com/research/public_csvs/zhvi/City_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv → `housing-data-app/public/data/default-housing-data.csv`

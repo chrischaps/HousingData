@@ -31,3 +31,6 @@ public/data/markets/
 *.njsproj
 *.sln
 *.sw?
+
+# Zillow source CSVs (~99 MB): fetched by `npm run fetch-data`, not tracked
+public/data/default-*.csv

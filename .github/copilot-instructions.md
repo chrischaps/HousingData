@@ -368,12 +368,10 @@ Cloud Run (deployed)
 ### Data Updates (Monthly)
 
 ```bash
-# 1. Download new ZHVI/ZORI from Zillow
-# 2. Replace housing-data-app/public/data/default-housing-data.csv
-# 3. Split and upload
-npm run split-csv
-npm run upload-csv
-# Data is immediately available (no deployment needed due to CDN caching)
+# One command downloads fresh Zillow sources, splits, publishes, verifies:
+npm run refresh-data
+# Step by step: npm run fetch-data && npm run split-csv && npm run upload-csv
+# No deployment needed: the app reads manifest.json and busts its cache with ?v=<dataVersion>.
 ```
 
 ## Performance Guidelines
